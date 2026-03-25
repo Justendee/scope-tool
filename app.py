@@ -6,7 +6,16 @@ import os
 
 import fitz
 import streamlit as st
+from anthropic import Anthropic
 from dotenv import load_dotenv
+
+SPEC_PARSE_SYSTEM_PROMPT = (
+    "You are an expert construction estimator working for a general "
+    "contractor. You are reading a specification division and extracting "
+    "scope items for a trade subcontractor scope document."
+)
+
+SPEC_PARSE_MODEL = "claude-sonnet-4-6"
 
 
 def load_env_from_dotenv() -> str | None:
@@ -28,6 +37,53 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
         return "\n".join(parts)
     finally:
         doc.close()
+
+
+def parse_spec_division(spec_text: str) -> None:
+    """
+    Send extracted specification text to Claude and show scope items in the
+    main panel.
+    """
+    if not ANTHROPIC_API_KEY:
+        st.error(
+            "ANTHROPIC_API_KEY is not set. Add it to your `.env` file in the "
+            "project folder."
+        )
+        return
+    stripped = spec_text.strip()
+    if not stripped:
+        st.warning("No specification text to parse. Upload a PDF with text.")
+        return
+
+    user_prompt = (
+        "Read this specification division and extract all scope items that "
+        "would be required for a subcontractor performing this work. List "
+        "each scope item on a separate line. Be specific and project-focused. "
+        "Do not include administrative or submittal requirements. "
+        f"Specification text: {stripped}"
+    )
+
+    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+    try:
+        with st.spinner("Calling Claude to extract scope items…"):
+            message = client.messages.create(
+                model=SPEC_PARSE_MODEL,
+                max_tokens=8192,
+                system=SPEC_PARSE_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+    except Exception as exc:
+        st.error(f"Anthropic API request failed: {exc}")
+        return
+
+    reply_parts: list[str] = []
+    for block in message.content:
+        if block.type == "text":
+            reply_parts.append(block.text)
+    result = "".join(reply_parts)
+
+    st.subheader("Extracted Scope Items")
+    st.markdown(result)
 
 ENTITY_OPTIONS = [
     "SCOTT Construction Ltd",
@@ -130,10 +186,27 @@ st.subheader("Actions")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.button("Generate Scope Summary", use_container_width=True)
+    scope_summary_clicked = st.button(
+        "Generate Scope Summary",
+        use_container_width=True,
+    )
 with col2:
     st.button("Generate Appendix B", use_container_width=True)
 with col3:
     st.button("Populate CAR", use_container_width=True)
 with col4:
     st.button("Generate Recommendation", use_container_width=True)
+
+if scope_summary_clicked:
+    if not uploaded_pdfs:
+        st.warning("Upload at least one PDF.")
+    else:
+        try:
+            combined_chunks: list[str] = []
+            for f in uploaded_pdfs:
+                combined_chunks.append(f"--- {f.name} ---\n")
+                combined_chunks.append(extract_pdf_text(f.getvalue()))
+                combined_chunks.append("\n\n")
+            parse_spec_division("".join(combined_chunks))
+        except Exception as exc:
+            st.error(f"Could not read or process PDFs: {exc}")
