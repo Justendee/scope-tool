@@ -2,7 +2,32 @@
 AI Assisted Scope Management Tool — Streamlit UI (layout only).
 """
 
+import os
+
+import fitz
 import streamlit as st
+from dotenv import load_dotenv
+
+
+def load_env_from_dotenv() -> str | None:
+    """Load `.env` and return `ANTHROPIC_API_KEY` from the environment."""
+    load_dotenv()
+    return os.environ.get("ANTHROPIC_API_KEY")
+
+
+ANTHROPIC_API_KEY = load_env_from_dotenv()
+
+
+def extract_pdf_text(pdf_bytes: bytes) -> str:
+    """Extract plain text from a PDF using PyMuPDF, page by page."""
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    try:
+        parts: list[str] = []
+        for page in doc:
+            parts.append(page.get_text())
+        return "\n".join(parts)
+    finally:
+        doc.close()
 
 ENTITY_OPTIONS = [
     "SCOTT Construction Ltd",
@@ -87,6 +112,18 @@ uploaded_pdfs = st.file_uploader(
     type=["pdf"],
     accept_multiple_files=True,
 )
+
+if uploaded_pdfs:
+    try:
+        first_pdf = uploaded_pdfs[0]
+        extracted = extract_pdf_text(first_pdf.getvalue())
+        preview = extracted[:500]
+        st.caption(
+            f"Extracted text preview (first 500 characters) — **{first_pdf.name}**"
+        )
+        st.text(preview)
+    except Exception as exc:
+        st.error(f"Could not extract text from PDF: {exc}")
 
 st.divider()
 st.subheader("Actions")
