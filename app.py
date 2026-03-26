@@ -11,6 +11,8 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_UNDERLINE
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
 import fitz
 import streamlit as st
@@ -21,6 +23,16 @@ from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
 
 from appendix_b_boilerplate import GENERAL_SCOPE_BOILERPLATE
+
+# ── Boilerplate tag diagnostics (printed once on startup) ─────────────────────
+_DIAG_ITEMS = {6: 3, 20: 17, 44: 41, 45: 42, 46: 43}  # item_number: list_index
+print("\n=== BOILERPLATE TAG DIAGNOSTICS ===")
+for _item_num, _idx in _DIAG_ITEMS.items():
+    _raw = GENERAL_SCOPE_BOILERPLATE[_idx]
+    _preview = _raw[:120].replace("\n", "\\n")
+    print(f"  Item {_item_num} (index {_idx}): {_preview!r}")
+print("===================================\n")
+# ──────────────────────────────────────────────────────────────────────────────
 
 SPEC_PARSE_SYSTEM_PROMPT = (
     "You are an expert construction estimator working for a general "
@@ -80,6 +92,13 @@ RULES:
   even if it appears in the drawings or specifications.
 - Include multiple mobilizations as the final item if the 
   project scope suggests phased work.
+- Do NOT reference the project name, project type, or project 
+  location in any scope item. Scope items describe the work 
+  only, not what project it is for.
+  Bad: 'Allow for multiple mobilizations to accommodate phased 
+  construction of this library expansion project'
+  Good: 'Allow for multiple mobilizations as required for the 
+  duration of the project'
 - Do not include technical specifications, standards, ratings, 
   measurements, product numbers, or code references in scope 
   items. The specifications and drawings are already contract 
@@ -277,12 +296,24 @@ def _appendix_b_word_bytes(
     specific_scope_items: str,
     entity_name: str,
     intro_text: str = "",
+    subcontractor_name: str = "",
 ) -> bytes:
-    """Full Appendix B Word document – TNR 11 pt, 1-inch margins, hanging indents."""
+    """Full Appendix B Word document – TNR 11 pt, 0.75-inch margins, hanging indents."""
     num = _project_field(project_number)
     tname = _project_field(trade_or_division)
-    div_display = (division_reference or "").strip() or "[Division reference pending]"
+    raw_div = (division_reference or "").strip()
+    # CSI numbers only (for Division line): strip section titles after each hyphen
+    if raw_div:
+        _parts = re.split(r"\s*/\s*", raw_div)
+        _nums_only = [re.sub(r"\s*[-\u2013]\s*.*", "", p).strip() for p in _parts]
+        div_numbers = " / ".join(n for n in _nums_only if n)
+    else:
+        div_numbers = ""
+    div_display = div_numbers or "[Division reference pending]"
+    # Full reference with em dashes (for item 1.2)
+    div_full_emdash = raw_div.replace(" - ", " \u2013 ") if raw_div else "[Division reference pending]"
     ent = _project_field(entity_name)
+    sub_display = (subcontractor_name or "").strip() or "TBD"
 
     doc = Document()
 
@@ -302,9 +333,56 @@ def _appendix_b_word_bytes(
     rh1.font.size = Pt(10)
     hp2 = header.add_paragraph()
     hp2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    rh2 = hp2.add_run(f"Contract # {num}")
+    rh2 = hp2.add_run(f"Contract#{num} \u2013 Job#{num}")
     rh2.font.name = "Times New Roman"
     rh2.font.size = Pt(10)
+
+    # ── Page footer (every page) ──────────────────────────────────────────────
+    # Single paragraph; tab stops: center at 3.5" (5040 twips) and right at 7"
+    # (10080 twips) relative to the left margin of a 7"-wide text area.
+    # Left: label  |  Center: date  |  Right: Page X of Y
+    footer = sec.footer
+    for fp in footer.paragraphs:
+        fp.clear()
+    fp = footer.paragraphs[0]
+    pPr = fp._p.get_or_add_pPr()
+    tabs_el = OxmlElement("w:tabs")
+    for pos_twips, tab_type in ((5040, "center"), (10080, "right")):
+        tab = OxmlElement("w:tab")
+        tab.set(qn("w:val"), tab_type)
+        tab.set(qn("w:pos"), str(pos_twips))
+        tabs_el.append(tab)
+    pPr.append(tabs_el)
+
+    def _footer_run(para, text: str) -> None:
+        r = para.add_run(text)
+        r.font.name = "Times New Roman"
+        r.font.size = Pt(9)
+
+    def _field_run(para, field_name: str) -> None:
+        """Insert a simple Word field (PAGE or NUMPAGES) as a run."""
+        r = para.add_run()
+        r.font.name = "Times New Roman"
+        r.font.size = Pt(9)
+        for ftype, itext in (("begin", None), (None, field_name), ("end", None)):
+            if ftype is not None:
+                fc = OxmlElement("w:fldChar")
+                fc.set(qn("w:fldCharType"), ftype)
+                r._r.append(fc)
+            else:
+                it = OxmlElement("w:instrText")
+                it.set(qn("xml:space"), "preserve")
+                it.text = f" {itext} "
+                r._r.append(it)
+
+    _footer_run(fp, "SSP - CCA 1 -2008 Contract and SC\u2019s")
+    _footer_run(fp, "\t")
+    _footer_run(fp, "Updated Feb 7, 2022")
+    _footer_run(fp, "\t")
+    _footer_run(fp, "Page ")
+    _field_run(fp, "PAGE")
+    _footer_run(fp, " of ")
+    _field_run(fp, "NUMPAGES")
 
     # ── Default body style: TNR 11pt, 6pt space after, no space before ────────
     normal = doc.styles["Normal"]
@@ -320,7 +398,10 @@ def _appendix_b_word_bytes(
     # Sub-items (1.1, 56.x): first line starts at 0.5", text wraps at 1.0".
     #   Use "\t" between sub-number and body text.
 
-    _inline_underline_pat = re.compile(r"UNDERLINE:(.*?):/UNDERLINE", re.DOTALL)
+    # Matches UNDERLINE:...:/UNDERLINE  and  [ITALIC]...[/ITALIC]
+    _inline_markup_pat = re.compile(
+        r"UNDERLINE:(.*?):/UNDERLINE|\[ITALIC\](.*?)\[/ITALIC\]", re.DOTALL
+    )
 
     def _add_inline_markup_runs(
         para,
@@ -330,9 +411,9 @@ def _appendix_b_word_bytes(
         strike: bool = False,
         italic: bool = False,
     ) -> None:
-        """Add runs to para, rendering UNDERLINE:...:/UNDERLINE spans as underlined."""
+        """Add runs, rendering UNDERLINE:...:/UNDERLINE and [ITALIC]...[/ITALIC] spans."""
         last = 0
-        for m in _inline_underline_pat.finditer(text):
+        for m in _inline_markup_pat.finditer(text):
             pre = text[last : m.start()]
             if pre:
                 r = para.add_run(pre)
@@ -341,13 +422,16 @@ def _appendix_b_word_bytes(
                 r.bold = bold
                 r.font.strike = strike
                 r.italic = italic
-            ru = para.add_run(m.group(1))
-            ru.font.name = "Times New Roman"
-            ru.font.size = Pt(11)
-            ru.bold = bold
-            ru.font.strike = strike
-            ru.italic = italic
-            ru.font.underline = WD_UNDERLINE.SINGLE
+            is_underline = m.group(1) is not None
+            span_text = m.group(1) if is_underline else m.group(2)
+            rs = para.add_run(span_text)
+            rs.font.name = "Times New Roman"
+            rs.font.size = Pt(11)
+            rs.bold = bold
+            rs.font.strike = strike
+            rs.italic = italic if is_underline else True
+            if is_underline:
+                rs.font.underline = WD_UNDERLINE.SINGLE
             last = m.end()
         tail = text[last:]
         if tail:
@@ -404,6 +488,7 @@ def _appendix_b_word_bytes(
         p = doc.add_paragraph()
         p.paragraph_format.left_indent = Inches(0.5)
         p.paragraph_format.first_line_indent = Inches(-0.5)
+        p.paragraph_format.space_after = Pt(4)
         rn = p.add_run(f"{num_str}\t")
         rn.font.name = "Times New Roman"
         rn.font.size = Pt(11)
@@ -417,6 +502,7 @@ def _appendix_b_word_bytes(
         p = doc.add_paragraph()
         p.paragraph_format.left_indent = Inches(1.0)
         p.paragraph_format.first_line_indent = Inches(-0.5)
+        p.paragraph_format.space_after = Pt(4)
         rn = p.add_run(f"{num_str}\t")
         rn.font.name = "Times New Roman"
         rn.font.size = Pt(11)
@@ -425,7 +511,7 @@ def _appendix_b_word_bytes(
         rb.font.size = Pt(11)
 
     # ── Title: centered, TNR 12pt, underlined ─────────────────────────────────
-    _para(f"Contract # {num} \u2013 {tname}", underline=True, size=12, center=True)
+    _para(f"Contract # {num}-??? \u2013 {sub_display}", underline=True, size=12, center=True)
 
     # ── Preamble & division reference ─────────────────────────────────────────
     _para(
@@ -433,7 +519,7 @@ def _appendix_b_word_bytes(
         "the Contract Scope of Work includes but is not limited to:",
         bold=True,
     )
-    _para(f"Division \u2013\u2013 {div_display}", bold=True)
+    _para(f"Division \u2013 {div_display}", bold=True)
 
     # ── Item 1 ────────────────────────────────────────────────────────────────
     _numbered(
@@ -445,13 +531,14 @@ def _appendix_b_word_bytes(
         "following sections:",
     )
     _sub_item("1.1", "Division 1 \u2013 General Requirements")
-    _sub_item("1.2", div_display)
+    _sub_item("1.2", f"Section {div_full_emdash}")
     _sub_item("1.3", "Related Sections in Specifications")
 
     # ── Item 2 heading ────────────────────────────────────────────────────────
     p2 = doc.add_paragraph()
     p2.paragraph_format.left_indent = Inches(0.5)
     p2.paragraph_format.first_line_indent = Inches(-0.5)
+    p2.paragraph_format.space_after = Pt(4)
     r2n = p2.add_run("2.\t")
     r2n.font.name = "Times New Roman"
     r2n.font.size = Pt(11)
@@ -469,21 +556,10 @@ def _appendix_b_word_bytes(
             body = body.replace("Scott Special Projects Ltd.", ent)
         _numbered(f"{item_num}.", body, strike=is_strike, italic=is_strike)
 
-    # ── Item 56 heading (bold + underlined) ───────────────────────────────────
-    p56 = doc.add_paragraph()
-    p56.paragraph_format.left_indent = Inches(0.5)
-    p56.paragraph_format.first_line_indent = Inches(-0.5)
-    r56n = p56.add_run("56.\t")
-    r56n.font.name = "Times New Roman"
-    r56n.font.size = Pt(11)
-    r56n.bold = True
-    r56h = p56.add_run("Specific Scope of Work:")
-    r56h.font.name = "Times New Roman"
-    r56h.font.size = Pt(11)
-    r56h.bold = True
-    r56h.font.underline = WD_UNDERLINE.SINGLE
+    # ── Item 56 heading (standalone bold + underlined, no number) ────────────
+    _heading("Specific Scope of Work:")
 
-    # ── Item 56 intro sentence ────────────────────────────────────────────────
+    # ── Item 56 intro sentence (numbered) ─────────────────────────────────────
     _verb = DIVISION_VERB_PHRASES.get(trade_or_division, "supply and install")
     _phrase = (intro_text or "").strip().rstrip(",.") or f"{tname} scope"
     if _verb == "supply and application of":
@@ -495,7 +571,7 @@ def _appendix_b_word_bytes(
         f"{_phrase}, in accordance with drawings and specifications, "
         f"including, but not limited to:"
     )
-    _para(_intro, plain_indent=0.5)
+    _numbered("56.", _intro)
 
     # ── 56.x sub-items ───────────────────────────────────────────────────────
     _sub_pat = re.compile(r"^(56\.\d+)\s+(.*)")
@@ -1210,6 +1286,7 @@ if appendix_b_clicked:
                     appendix_text,
                     selected_entity,
                     intro_text=st.session_state.get("appendix_b_intro") or "",
+                    subcontractor_name=subcontractor_name or "",
                 )
                 st.download_button(
                     label="Download Appendix B (.docx)",

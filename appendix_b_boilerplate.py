@@ -26,8 +26,8 @@ GENERAL_SCOPE_BOILERPLATE = [
     "trade\u2019s work. All work to be performed in accordance with the most recent building "
     "codes and standards, and in accordance with the authorities having jurisdiction.",
 
-    # Item 6 - LEED clause (rendered as strikethrough in Word)
-    "STRIKETHROUGH:Optional: This project is a LEED Gold project. SCL\u2019s plans for "
+    # Item 6 - LEED clause (italic label, normal body text)
+    "[ITALIC]Optional:[/ITALIC] This project is a LEED Gold project. SCL\u2019s plans for "
     "Construction Waste Management, Indoor Air Quality during Construction, and the site\u2019s "
     "Sedimentation Control Plan will be strictly enforced. This plan also addresses minimizing "
     "the spread of dust and dirt to and from the jobsite. A copy of each of these Plans is "
@@ -111,12 +111,12 @@ GENERAL_SCOPE_BOILERPLATE = [
     "extent required to properly perform the Work, regardless of the party responsible for "
     "the installation of weather enclosures/hoarding.",
 
-    # Item 20 - Tower crane clause (rendered as strikethrough in Word)
-    "STRIKETHROUGH:Use of tower crane will be limited and at the discretion of and in "
-    "coordination with Forming Contractor and SSP Superintendent, during normal working hours "
-    "for the duration of the formwork plus one month. Trade Contractors will be responsible "
-    "for providing access equipment to do their work for any work done after removal of "
-    "the cranes.",
+    # Item 20 - Tower crane clause (italic instruction, normal body text)
+    "[ITALIC]Cross out if no tower crane on site.[/ITALIC] Use of tower crane will be limited "
+    "and at the discretion of and in coordination with Forming Contractor and SSP "
+    "Superintendent, during normal working hours for the duration of the formwork plus one "
+    "month. Trade Contractors will be responsible for providing access equipment to do their "
+    "work for any work done after removal of the cranes.",
 
     # Item 21
     "Provide weight information to crane operator for all loads to be lifted by the tower "
@@ -212,7 +212,7 @@ GENERAL_SCOPE_BOILERPLATE = [
     "Hot work done under firewatch must be recorded in a Hazard Assessment and a copy provided "
     "to Scott superintendent prior to starting work. Firewatch coverage is required for a "
     "minimum of 1 hour by the trade doing the work or up to 4 hours depending on external "
-    "conditions and stakeholder requirements (insurance, municipal bylaw or other) with the "
+    "conditions and stakeholder requirements (insurance, municipal byu law or other) with the "
     "most stringent requirement to be followed.",
 
     # Item 43
