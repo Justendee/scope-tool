@@ -1,0 +1,179 @@
+# Painting Subcontractor Scope Items
+## VPL Marpole Branch Library Expansion – Section 09 91 00 & 09 96 46
+
+---
+
+### SURFACE PREPARATION
+
+- Clean, prepare, and prime all substrates in accordance with MPI requirements prior to painting
+- Perform small crack repair, patching, and making good of surfaces to MPI preparation requirements
+- Caulk surfaces as required for acceptance of painting
+- Assess all existing surfaces for Degree of Surface Deterioration (DSD-0 through DSD-3) and prepare accordingly
+- Repair DSD-1 through DSD-3 defects on existing surfaces scheduled for repainting
+- Remove and mask miscellaneous hardware, electrical plates, light fixture trim, escutcheons, and fittings prior to painting; clean and reinstall upon completion
+- Remove doors before painting to paint top and bottom edges; rehang upon completion
+- Protect adjacent surfaces, rating labels on doors/frames, equipment, and piping with drop cloths, shields, and masking
+- Seal bleed-through marks with shellac prior to finish coats
+- Remove mildew from impervious surfaces by scrubbing with tri-sodium phosphate and bleach solution; rinse and allow to dry
+- Clean aluminum surfaces by steam or high-pressure water; remove oxidation with acid etch and solvent washing; apply etching primer immediately following cleaning
+- Remove dirt, grease, and oil from canvas and cotton insulated coverings
+- Acid etch concrete floors, rinse with clean water, verify acid-alkali balance, and allow to dry
+- Remove contamination from copper surfaces scheduled for paint finish; apply vinyl etch primer immediately following cleaning
+- Apply oxidizing solution to copper surfaces scheduled for natural oxidized finish; rinse and allow to dry
+- Fill minor defects in gypsum board surfaces with filler compound; spot prime repaired areas
+- Remove surface contamination and oils from galvanized surfaces; wash with solvent; apply coat of etching primer
+- Remove dirt, loose mortar, scale, salt/alkali powder, oil, and grease from concrete and masonry surfaces; rinse and allow to dry
+- Fill hairline cracks, small holes, and imperfections in plaster surfaces with latex patching plaster; wash and neutralize high-alkali surfaces
+- Prepare all interior steel surfaces to minimum SSPC SP6 Commercial Blast Cleaning
+- Remove grease, mill scale, weld splatter, dirt, and rust from uncoated steel and iron surfaces; apply phosphoric acid solution treatment; spot prime after repairs
+- Sand and scrape shop-primed steel surfaces to remove loose primer and rust; feather edges; clean with solvent; prime bare steel areas
+- Wipe dust and grit from interior wood items scheduled for paint finish; seal knots, pitch streaks, and sappy sections; fill nail holes and cracks after primer dries; sand between coats
+- Wipe dust and grit from interior wood items scheduled for transparent finish; seal knots and sappy sections; fill nail holes and cracks after sealer dries; sand lightly between coats
+- Seal top and bottom edges of metal doors scheduled for painting with primer
+- Test shop-applied primers for compatibility with specified finish coats
+- Conduct moisture testing using calibrated electronic moisture meter on all substrates prior to painting
+- Test concrete floors for moisture using cover patch test method
+- Test concrete, masonry, and plaster surfaces for alkalinity as required
+- Prepare surface and apply prime coat for wall coverings prior to installation per MPI and wall covering manufacturer requirements
+- Prime concealed surfaces of interior woodwork scheduled to receive stain or varnish finish with gloss varnish reduced 25% with mineral spirits
+
+---
+
+### PRIMING
+
+- Prime structural steel and miscellaneous metal with water-based rust-inhibitive primer (INT 5.1S system)
+- Prime galvanized metal surfaces (doors, frames, misc. steel, pipes, ducts) with water-based galvanized primer (INT 5.3N system)
+- Prime aluminum (unanodized) surfaces with quick-dry primer for aluminum (INT 5.4G system)
+- Prime dimension lumber with latex wood primer (INT 6.2L system)
+- Prime dressed lumber with latex wood primer (INT 6.3V system)
+- Prime wood paneling and casework with latex wood primer (INT 6.4T system)
+- Prime MDO panels with latex wood primer (INT 6.4S system); prime all 6 sides of each MDO panel prior to installation
+- Prime plastic surfaces with water-based bonding primer (INT 6.8F system)
+- Prime plaster and gypsum board surfaces with low-odor, low-VOC primer sealer (INT 9.2M system)
+- Prime concrete vertical surfaces (walls, soffits) with water-based primer sealer, low VOC (INT 3.1M system)
+- Back-prime concealed surfaces of woodwork with primer paint
+- Prime and back-prime all wood materials per MPI Architectural Painting Specification Manual requirements
+- Apply full interior transition coat over existing alkyd-finish surfaces prior to applying finish coats
+- Field prime existing structural steel columns per intumescent fireproofing manufacturer requirements (Section 09 96 46)
+
+---
+
+### INTERIOR NEW PAINT SYSTEMS
+
+- Apply INT 3.1M Institutional Low Odor/VOC G5 (semi-gloss) finish system to concrete vertical surfaces (walls, soffits)
+- Apply INT 3.2G water-based concrete floor sealer system to concrete horizontal surfaces (floors); install minimum 5m x 5m mock-up prior to full application
+- Apply INT 5.1S Institutional Low Odor/VOC G5 finish system to structural steel and metal fabrications over water-based rust-inhibitive primer
+- Apply INT 5.3N Institutional Low Odor/VOC G5 finish system to galvanized metal doors, frames, misc. steel, pipes, and ducts over water-based galvanized primer
+- Apply INT 5.4G Institutional Low Odor/VOC G5 finish system to unanodized aluminum surfaces over quick-dry aluminum primer
+- Apply INT 6.2L Institutional Low Odor/VOC G3 finish system to dimension lumber over latex wood primer
+- Apply INT 6.3V Institutional Low Odor/VOC G3 finish system to dressed lumber over latex wood primer
+- Apply INT 6.4C semi-transparent stain (SB) to wood paneling and casework (except MDO panels)
+- Apply INT 6.4T Institutional Low Odor/VOC G3 finish system to wood paneling and casework over latex wood primer
+- Apply INT 6.4S High Performance Architectural Latex finish system to MDO panels over latex wood primer
+- Apply INT 6.8F Institutional Low Odor/VOC G4 finish system to plastic surfaces over water-based bonding primer
+- Apply INT 9.2M Institutional Low Odor/VOC G3 finish system to plaster and gypsum board surfaces over low-odor, low-VOC primer sealer
+- Apply INT 9.3A Latex Flat finish system to acoustic panels and tiles
+- Apply clear sealer (INT 3.2G or as specified) to concrete floors in service rooms
+
+---
+
+### INTERIOR REPAINT SYSTEMS (EXISTING SURFACES)
+
+- Apply RIN 3.1L Institutional Low Odor/Low VOC G3 finish to existing concrete vertical surfaces
+- Apply RIN 3.2E concrete floor sealer to existing concrete horizontal surfaces (floors)
+- Apply RIN 4.2L Institutional Low Odor/Low VOC G3 finish to concrete masonry units
+- Apply RIN 5.1S Institutional Low Odor/Low VOC G5 finish to existing structural steel and metal fabrications
+- Apply RIN 5.3K Institutional Low Odor/Low VOC G5 finish to existing galvanized metal (doors, frames, railings, misc. steel, pipes, ducts, flashing, overhead decking)
+- Apply RIN 5.4G Institutional Low Odor/Low VOC G5 finish to existing unanodized aluminum surfaces
+- Apply RIN 6.2P Institutional Low Odor/Low VOC G3 finish to existing dimension lumber
+- Apply RIN 6.3V Institutional Low Odor/Low VOC G3 finish to existing dressed lumber
+- Apply RIN 6.4D Institutional Low Odor/Low VOC G3 finish to existing wood paneling and casework
+- Apply RIN 6.4E semi-transparent stain finish to existing wood paneling and casework as scheduled
+- Apply RIN 6.8F Institutional Low Odor/Low VOC G4 finish to existing plastic surfaces
+- Apply RIN 9.2M Institutional Low Odor/Low VOC G3 finish to existing plaster and gypsum board surfaces
+- Apply RIN 9.3D Institutional Low Odor/Low VOC G3 finish to existing acoustic panels and tiles
+- Prime and paint existing interior aluminum window doors and frames to receive new finish per INT 5.4G system
+
+---
+
+### COLOUR APPLICATION
+
+- Apply all finish coats using specified Benjamin Moore colours per project Colour Legend (PTD1 through PTD10)
+- Apply minimum four (4) coats of paint where deep or bright colours are used to achieve satisfactory results
+- Tint each successive coat progressively lighter to confirm coat count
+- Apply MPI Premium Grade finish standard to all painted surfaces
+- Apply semi-gloss (G5) finish to all interior walls (except areas noted otherwise on Finish Schedule)
+
+---
+
+### MECHANICAL & ELECTRICAL EQUIPMENT PAINTING
+
+- Paint all exposed-to-view unfinished conduits, piping, hangers, ductwork, and mechanical/electrical equipment to match adjacent surfaces in colour and texture in exposed interior areas, high-humidity interior areas, and mechanical/electrical rooms
+- Touch up scratches and marks on factory-painted finishes and mechanical/electrical equipment with manufacturer-supplied paint
+- Paint inside of ductwork, convector cabinets, and baseboard heating cabinets where visible behind louvers, grilles, and diffusers for minimum 460 mm or beyond sight line with primer and one coat of matt black (non-reflecting) paint
+- Paint inside of light valances gloss white
+- Paint disconnect switches for fire alarm system and exit light systems in red enamel
+- Paint or band all fire protection piping and sprinkler lines red per mechanical specification requirements; keep sprinkler heads free of paint
+- Paint or band all natural gas piping yellow per mechanical specification requirements
+- Backprime and paint face and edges of plywood service panels for telephone and electrical equipment before installation to match adjacent wall surface; paint conduits, mounting accessories, and other unfinished items
+- Paint exterior steel electrical light standards (do not paint outdoor transformers and substation equipment)
+- Reinstall all electrical cover plates, hardware, light fixture trim, escutcheons, and fittings removed prior to finishing
+- Do not paint over equipment nameplates
+
+---
+
+### INTUMESCENT FIREPROOFING (Section 09 96 46)
+
+- Apply intumescent fireproofing to existing exposed structural steel columns as shown on Drawings to achieve 45-minute fire resistance rating and 1-hour F.R.R. at 130 mil (3.30 mm) finished dry thickness per ULC Design No. Z611
+- Field prime existing steel columns per fireproofing manufacturer requirements prior to intumescent application
+- Extend intumescent fireproofing from existing columns to existing mezzanine structure as required to ensure continuity of fire resistance rating
+- Apply intumescent fireproofing by brush, spray, or roller per manufacturer's instructions and ULC certification
+- Apply water-based thin-film intumescent fireproofing product (Fire Finish 120+ CFP-SP WB, A/D Firefilm III, SprayFilm WB 5, or approved alternate)
+- Apply protective decorative topcoat (A/D Coat Colour or approved alternate) over intumescent fireproofing; colour selected by Consultant from manufacturer's standard range
+- Install field-applied mock-up sample of intumescent system approximately 1.2 lineal metres x depth for Consultant review and Owner approval prior to proceeding with full work
+- Mask adjacent surfaces to avoid spillage and overcoating during intumescent application; remove stains on adjacent surfaces
+- Perform patching and repairing of intumescent fireproofing damaged by other trades (arrange cost recovery from responsible trade)
+- Touch up damaged intumescent fireproofing and decorative finish per coating manufacturer's directions
+- Protect intumescent coatings from damage until Substantial Performance
+- Verify dry film thickness using Dry Film Thickness Gauge per AWCI 12-B during installation
+- Replace any intumescent fireproofing determined to be non-compliant with specified thickness requirements
+
+---
+
+### GENERAL APPLICATION REQUIREMENTS
+
+- Apply all paints and coatings in accordance with MPI Painting Manual Premium Grade finish requirements
+- Sand and dust between each coat to provide anchor for next coat and remove defects visible from 1000 mm
+- Vacuum surfaces free of loose particles and use tack cloth prior to applying each successive coat
+- Allow each applied coat to fully dry before applying next coat
+- Continue paint finish behind wall-mounted items such as chalk boards and tack boards
+- Apply tinted fillers to match wood grain where clear finishes are required; work fillers into grain before set; wipe excess from surface
+- Perform all touch-ups and field painting as indicated on drawings and finish schedules
+- Prepare and paint mock-ups on all substrates as requested by Consultant to demonstrate specified colours, number of coats, gloss/sheen, and workmanship quality; approved mock-ups may remain as part of work
+- Maintain minimum ambient air and substrate temperatures above manufacturer's minimums for 24 hours before, during, and after paint application; provide supplemental heating and ventilation equipment if required
+- Perform no painting when relative humidity exceeds 85% or when dew point variance between air and surface temperature is less than 3°C
+- Ensure substrate moisture content does not exceed: 15% for wood; 12% for plaster and gypsum board; 12% for masonry, concrete, and CMU; 8% for concrete floors
+- Provide minimum lighting level of 323 lux on all surfaces to be painted
+- Provide safe and adequate ventilation beyond any temporary ventilation supplied by others where toxic, volatile, or flammable materials are in use
+- All materials to be from MPI Approved Product List (APL); provide all materials within each paint system from a single manufacturer
+- Use low-VOC, lead-free, and mercury-free materials where possible
+- Apply slip-resistant additive (rubber aggregate, silica sand, or ground walnut chips) to horizontal floor and stair enamel surfaces as required; mix into paint or broadcast into prime coat
+- Provide fireproof storage for toxic and volatile/flammable materials on site
+
+---
+
+### PROTECTION & CLEANING
+
+- Protect existing building surfaces and adjacent structures from paint spatters with non-staining covers or masking; restore any damaged surfaces
+- Protect fire labels on doors and frames from paint
+- Protect factory-finished products and equipment
+- Place "WET PAINT" signs in pedestrian and vehicle traffic areas as painting progresses
+- Remove, store, and reinstall light fixtures, surface hardware, and surface-mounted equipment prior to and after painting operations
+- Collect waste paint by type for delivery to recycling or collection facility where available
+- Place non-reusable hazardous/toxic waste materials in designated hazardous waste containers
+- Retain cleaning water for water-based materials; do not allow free-draining equipment cleaning
+- Retain cleaners, thinners, solvents, and excess paint in designated containers for proper disposal
+- Return solvent and oil-soaked rags for contaminant recovery or proper disposal
+- Dry out empty paint cans prior to disposal or recycling
+- Collect waste materials constituting fire hazard in closed metal containers and remove daily from site
+- Deliver 4 litres of each paint type and colour (from same production run) labeled and identified for Owner's maintenance use upon project completion

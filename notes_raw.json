@@ -1,0 +1,66 @@
+[
+  {
+    "note_id": "N001",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI output missed paintable caulking to window sills, casings, trims, and door frames as a separate scope item. This is standard on painting scopes and should always be included."
+  },
+  {
+    "note_id": "N002",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI output missed filling and sanding of nail, screw, and staple holes in wood trim prior to painting. This is standard prep work on painting scopes and should always be included."
+  },
+  {
+    "note_id": "N003",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI output missed coordination with drywall contractor to inspect and repair work after primer application by this trade, and re-prime after drywall repairs. This coordination item should always be included on painting scopes where GWB is present."
+  },
+  {
+    "note_id": "N004",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI output missed finish protection as a separate scope item. Protecting completed painting work from other trades should always be included as a standalone line item on painting scopes."
+  },
+  {
+    "note_id": "N005",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI output missed PST confirmation line. Every painting scope should include a line confirming PST is included in the above price. This applies to all trades with material supply."
+  },
+  {
+    "note_id": "N006",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI output missed exterior steel electrical light standards as a painting item. Drawing index did not include elevation or site sheets that would show this. For painting scopes always include elevation and site drawings in the drawing index, not just plans and schedules."
+  },
+  {
+    "note_id": "N007",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "AI grouped GWB walls, ceilings, door frames, and doors into broader items. The actual Appendix B had these as separate line items which helps the subcontractor price accurately. Painting scope items should be split by surface type rather than grouped broadly."
+  },
+  {
+    "note_id": "N008",
+    "date": "2026-03-25",
+    "project_number": "5246",
+    "trade": "Painting",
+    "project_type": "COV",
+    "note": "The item 56 intro line incorrectly used the subcontractor name from the Trade Name sidebar field instead of describing the trade scope. The intro line should describe the work being performed, not the subcontractor name. The AI should identify the trade description from the spec and drawing content and generate the intro line automatically. Subcontractor name should be a separate field used only in the filename at award."
+  }
+]
