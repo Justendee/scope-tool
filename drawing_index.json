@@ -1,0 +1,111 @@
+[
+  {
+    "sheet_number": "A-22-1-013",
+    "discipline": "Architectural",
+    "drawing_title": "Level 01 Reflected Ceiling Plan",
+    "trades_referenced": [
+      "Mechanical (HVAC - supply/exhaust air grilles, ducts)",
+      "Electrical (lighting - ceiling mounted troffer, suspended linear, recessed linear, feature pendant, cove, pot lights)",
+      "Fire Protection (FRR ratings - 1hr, 40 Min)",
+      "Acoustic (ACT ceiling tiles, acoustic wood slat panels)"
+    ],
+    "scope_notes": [
+      "Level 01 Reflected Ceiling Plan at 1:100 scale",
+      "Ceiling assemblies scheduled: XC1 (Existing), C1 (Gypsum Wall Board), C2 (Suspended 2x4 ACT1 - NRC 0.7), C3 (Suspended 3x2 ACT2 - NRC 0.7), C4 (Acoustic Wood Slat Panel - NRC 0.7), C5 (Rated Ceiling - 1hr FRR), C6 (Suspended Acoustic Ceiling Lid with 2x4 ACT1 - NRC 0.7), C7 (Suspended Gypsum Wall Board Ceiling)",
+      "Ceiling heights noted throughout plan (e.g., +3500, +3550, +3960, +2400, +3525, +2326)",
+      "Ceiling in Electrical Rooms to be rated: 1HR FRR",
+      "Ceiling in Janitor Room to be rated: 40 Min FRR",
+      "Patch and repair existing ceiling as required noted on west side",
+      "Align edge of ceiling to existing storefront wall",
+      "Bulkhead wall transition between different ceiling heights",
+      "Program Room, Meeting Rooms, Kids area, Bank Processing, Stacks, Adult Lounge, Branch Head Office, Washrooms all identified",
+      "Second floor beam above noted",
+      "RCP Legend includes: Ceiling Mounted Troffer Light, Suspended Linear Light, Recessed Linear Light, Feature Pendant Light, Reception Feature Light, Cove Light, Return/Exhaust Air Grille, Supply/Outdoor Air Duct, Sensor, Room Temperature Sensor",
+      "General notes reference Mechanical and Electrical drawings; all exposed louvres/diffusers to be primed and painted; access panels to Consultant's selection"
+    ],
+    "cross_references": [
+      "Mechanical drawings (for HVAC coordination)",
+      "Electrical drawings (for lighting coordination)",
+      "Ceiling Assembly Details (referenced within schedule)",
+      "SLC WHE2 System-A (referenced for C6 assembly)",
+      "Project: VPL Marpole Library",
+      "Drawing A-22-1-013 revision 4, dated 25/06/26"
+    ]
+  },
+  {
+    "sheet_number": "A-22-2-010",
+    "discipline": "Architectural",
+    "drawing_title": "Building Sections",
+    "trades_referenced": [
+      "Structural (structural upgrade scope, trusses, mezzanine framing)",
+      "Mechanical (New RTU - See Mech drawings)",
+      "Roofing (roof penetrations, parapet restraint detail)",
+      "Civil/Structural (neighbouring building interface)"
+    ],
+    "scope_notes": [
+      "Five building sections at 1:100 scale",
+      "Section 1: East-West Section Through Mezzanine",
+      "Section 2: North-South Section Through Public Area",
+      "Section 3: North-South Section Through Children's and Stacks",
+      "Section 4: East-West Section Through Main Entrance",
+      "Section 5: East-West Section Through Adult Collection",
+      "Key elevations noted: RL 32.080 Main Floor, RL 30.163 Mezzanine Level, RL 30.853 / 30.163 US of Truss, RL 35.738 top of structure",
+      "Structural upgrade scope only - See Struct noted on multiple sections",
+      "New RTU locations noted - See Mech on Sections 4 and 5",
+      "All roof penetrations and curbs to be coordinated to BCABC standards (Section 4)",
+      "Parapet restraint detail reference: see L.A-31-4-000",
+      "Mezzanine visible in multiple sections with mezzanine level indicated",
+      "Neighbouring building interfaces shown on north and south sides",
+      "Program Room, Kids, Book Processing, Branch Head Office, Stacks, Service Desk, Adult Lounge, Meeting Room 2 spaces identified in sections",
+      "East stair noted as NIC (Not in Contract) in Section 1",
+      "Scope of work boundary indicated with dashed lines"
+    ],
+    "cross_references": [
+      "Structural drawings (structural upgrade scope)",
+      "Mechanical drawings (New RTU locations)",
+      "L.A-31-4-000 (Parapet restraint detail)",
+      "Project: VPL Marpole Library",
+      "Drawing A-22-2-010 revision 4, dated 25/06/26"
+    ]
+  },
+  {
+    "sheet_number": "A-22-7-000",
+    "discipline": "Architectural",
+    "drawing_title": "Door Schedule & Room Finish Schedule",
+    "trades_referenced": [
+      "Doors and Hardware (hollow metal, wood, storefront)",
+      "Painting (PT01-PT010 paint finishes, various colours)",
+      "Flooring (RF1 Resilient Floor Grey, RF2 Resilient Floor Blue)",
+      "Wall Base (B1 Rubber Base Grey, B2 Rubber Base Blue)",
+      "Acoustic (ACT1 White, ACT2 Blue acoustic ceiling tiles)",
+      "Glazing (glazed interior storefront, tempered safety glass)",
+      "Security/Access Control (deadbolt, occupancy indicators, keyed locks)",
+      "Fire Protection (fire-rated door assemblies - 45min FRR)",
+      "Electrical (electric strikes, access control coordination)"
+    ],
+    "scope_notes": [
+      "Door Schedule covers Main Floor and Second Floor doors",
+      "Door types: A (Solid Core Wood Non-Rated), B (Solid Core Wood Fire Rated - 45min assembly), C (Hollow Metal Non-Rated), D (Hollow Metal Fire Rated), E (Insulated Metal Door), F (Glazed Interior Storefront), G (Double Door Hollow Core Metal)",
+      "Standard door size: 915 wide x 2135 high for most interior doors",
+      "Materials include: AMO (aluminium), HM (hollow metal), WD (wood), AL (aluminium), PTDB/PTDD/PTDE finishes",
+      "Hardware Groups 1-18 referenced",
+      "Door schedule notes include: deadbolt with occupancy indicators, acoustic rated perimeter seals, key locks, bolt permanently/remove functionality, new ADO on existing doors",
+      "Existing Storefront doors noted for E002-E007 series",
+      "Room Finish Schedule covers all Main Floor rooms: Lobby, Meeting Rooms, Kids, Program Room, Stacks, W/C, Staff W/C, Lunch Room, Janitor, Branch Head Office, Book Processing, Electrical, VPL Storage, Closets",
+      "Room finish legend: RF1/RF2 floors, B1/B2 wall base, PT01-PT010 interior paints (White, Salmon Peach, Light Blue, Light Yellow, Medium Blue, Blue Grey, Salmon, Dark Grey), TL Wall Tile, GL Glazing, HPL Laminate Grey, PLY Plywood, PLY2 Plywood Painted, MDO Medium Density Overlay",
+      "Ceiling finishes: PT01, ACT1, ACT2",
+      "Special notes: Wall protection per drawings, intumescent paint on exposed columns to achieve 45min FRR",
+      "Phase Created noted for each door (Stage 3, Stage 5 etc.)",
+      "Door schedule notes reference: A-72-4-000 for visibility graphic kit, A-31-11 December 2023 accessibility compliance"
+    ],
+    "cross_references": [
+      "A-72-4-000 (Visibility graphic kit / sightlines)",
+      "A-31-11 (Accessibility - December 2023 Guidelines for Accessible and Wayfinding Spaces Version 1.1)",
+      "Architectural plans and elevations (for door locations)",
+      "Hardware supplier specifications",
+      "Contract documents and specifications",
+      "Project: VPL Marpole Library",
+      "Drawing A-22-7-000 revision 3, dated 25/08/01"
+    ]
+  }
+]

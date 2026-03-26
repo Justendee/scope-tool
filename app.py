@@ -2,7 +2,11 @@
 AI Assisted Scope Management Tool — Streamlit UI (layout only).
 """
 
+import base64
+import json
 import os
+import re
+from pathlib import Path
 
 import fitz
 import streamlit as st
@@ -16,6 +20,28 @@ SPEC_PARSE_SYSTEM_PROMPT = (
 )
 
 SPEC_PARSE_MODEL = "claude-sonnet-4-6"
+
+INDEX_DRAWINGS_SYSTEM_PROMPT = (
+    "You are an expert construction estimator reviewing project "
+    "drawings. Extract structured information from each drawing sheet."
+)
+
+INDEX_DRAWINGS_USER_PROMPT = (
+    "For each drawing sheet in this batch, identify and return in "
+    "JSON format:\n"
+    "- sheet_number\n"
+    "- discipline\n"
+    "- drawing_title\n"
+    "- trades_referenced\n"
+    "- scope_notes (key scope items visible on this sheet)\n"
+    "- cross_references (any other documents or drawings referenced)\n"
+    "Return a JSON array with one object per sheet."
+)
+
+DRAWING_INDEX_PATH = Path(__file__).resolve().parent / "drawing_index.json"
+
+DRAWING_PAGE_RENDER_DPI = 150
+INDEX_BATCH_SIZE = 3
 
 
 def load_env_from_dotenv() -> str | None:
@@ -37,6 +63,145 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
         return "\n".join(parts)
     finally:
         doc.close()
+
+
+def _page_to_png_highres(page: fitz.Page) -> bytes:
+    """Render a PDF page to a high-resolution PNG using PyMuPDF."""
+    zoom = DRAWING_PAGE_RENDER_DPI / 72.0
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+    w, h = pix.width, pix.height
+    if w > 8000 or h > 8000:
+        scale = min(7500 / w, 7500 / h)
+        mat = fitz.Matrix(zoom * scale, zoom * scale)
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+    return pix.tobytes("png")
+
+
+def _parse_json_array_from_model_text(text: str) -> list:
+    """Parse a JSON array from Claude output, tolerating markdown fences."""
+    raw = text.strip()
+    fence = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", raw)
+    if fence:
+        raw = fence.group(1).strip()
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        start = raw.find("[")
+        end = raw.rfind("]")
+        if start == -1 or end == -1 or end <= start:
+            raise
+        data = json.loads(raw[start : end + 1])
+    if not isinstance(data, list):
+        raise ValueError("Model response was not a JSON array")
+    return data
+
+
+def _build_index_batch_content(png_pages: list[bytes]) -> list[dict]:
+    """Anthropic Messages API content blocks: ordered images then the user prompt."""
+    blocks: list[dict] = []
+    for png in png_pages:
+        b64 = base64.standard_b64encode(png).decode("utf-8")
+        blocks.append(
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/png",
+                    "data": b64,
+                },
+            }
+        )
+    blocks.append({"type": "text", "text": INDEX_DRAWINGS_USER_PROMPT})
+    return blocks
+
+
+def index_drawings(pdf_bytes: bytes) -> None:
+    """
+    Render each page as a high-res image, index in batches of three via Claude,
+    merge into `drawing_index.json`, and show a summary in the main panel.
+    """
+    if not ANTHROPIC_API_KEY:
+        st.error(
+            "ANTHROPIC_API_KEY is not set. Add it to your `.env` file in the "
+            "project folder."
+        )
+        return
+
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    try:
+        n_pages = doc.page_count
+        if n_pages == 0:
+            st.warning("The PDF has no pages to index.")
+            return
+
+        with st.spinner("Rendering drawing pages at high resolution…"):
+            page_pngs: list[bytes] = []
+            for page in doc:
+                page_pngs.append(_page_to_png_highres(page))
+    finally:
+        doc.close()
+
+    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+    combined: list[dict] = []
+    n_batches = (n_pages + INDEX_BATCH_SIZE - 1) // INDEX_BATCH_SIZE
+    progress_slot = st.empty()
+    progress_slot.progress(0, text="Indexing drawings…")
+
+    try:
+        for b in range(n_batches):
+            start = b * INDEX_BATCH_SIZE
+            batch_pngs = page_pngs[start : start + INDEX_BATCH_SIZE]
+            content = _build_index_batch_content(batch_pngs)
+            with st.spinner(
+                f"Indexing batch {b + 1} of {n_batches} ({len(batch_pngs)} sheet(s))…"
+            ):
+                message = client.messages.create(
+                    model=SPEC_PARSE_MODEL,
+                    max_tokens=8192,
+                    system=INDEX_DRAWINGS_SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": content}],
+                )
+            reply_parts: list[str] = []
+            for block in message.content:
+                if block.type == "text":
+                    reply_parts.append(block.text)
+            reply_text = "".join(reply_parts)
+            batch_rows = _parse_json_array_from_model_text(reply_text)
+            for row in batch_rows:
+                if isinstance(row, dict):
+                    combined.append(row)
+            progress_slot.progress((b + 1) / n_batches, text="Indexing drawings…")
+    except Exception as exc:
+        progress_slot.empty()
+        st.error(f"Drawing index failed: {exc}")
+        return
+
+    progress_slot.empty()
+
+    try:
+        with open(DRAWING_INDEX_PATH, "w", encoding="utf-8") as f:
+            json.dump(combined, f, indent=2, ensure_ascii=False)
+    except OSError as exc:
+        st.error(f"Could not write {DRAWING_INDEX_PATH}: {exc}")
+        return
+
+    st.success(f"Saved drawing index to `{DRAWING_INDEX_PATH.name}`.")
+
+    st.subheader("Drawing index summary")
+    st.write(
+        f"**Sheets indexed:** {len(combined)} row(s) extracted from "
+        f"{n_pages} drawing page(s), sent in {n_batches} batch(es) of up to "
+        f"{INDEX_BATCH_SIZE} page(s) each."
+    )
+    table_rows = [
+        {
+            "Sheet number": r.get("sheet_number", ""),
+            "Title": r.get("drawing_title", ""),
+        }
+        for r in combined
+    ]
+    st.dataframe(table_rows, use_container_width=True, hide_index=True)
 
 
 def parse_spec_division(spec_text: str) -> None:
@@ -197,6 +362,12 @@ with col3:
 with col4:
     st.button("Generate Recommendation", use_container_width=True)
 
+st.markdown("")
+index_drawings_clicked = st.button(
+    "Index Drawings",
+    key="btn_index_drawings",
+)
+
 if scope_summary_clicked:
     if not uploaded_pdfs:
         st.warning("Upload at least one PDF.")
@@ -210,3 +381,12 @@ if scope_summary_clicked:
             parse_spec_division("".join(combined_chunks))
         except Exception as exc:
             st.error(f"Could not read or process PDFs: {exc}")
+
+if index_drawings_clicked:
+    if not uploaded_pdfs:
+        st.warning("Upload at least one PDF.")
+    else:
+        try:
+            index_drawings(uploaded_pdfs[0].getvalue())
+        except Exception as exc:
+            st.error(f"Could not index drawings: {exc}")
