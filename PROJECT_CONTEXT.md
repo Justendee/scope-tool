@@ -57,21 +57,31 @@ formats.
 
 ---
 
-## Four Core Workflows
-The four workflows map directly to the division tabs in the CAR Excel
-file. Each division tab is one trade. One Appendix B is generated per
-division tab.
+## Three Core Workflows
+The tool has three workflows accessed via three buttons in the UI.
+The CAR award recommendation has been removed. The estimator reviews
+the populated CAR and makes the award decision using their own
+judgment and knowledge. The AI does not generate dollar amounts for
+missing scope or make award recommendations.
 
-1. Scope summary: reads drawings and specs, produces a
-   project-specific scope overview organized by division tab
-2. Appendix B generation: produces one Appendix B Word document per
-   division tab, based on drawing and specification content for that
-   trade
-3. CAR population (bid leveling): parses trade quotes against the
-   Appendix B scope items and populates the CAR Excel tab for that
-   division with Included, Not Included, or dollar amounts per bidder
-4. CAR comments and recommendation: generates the COMMENTS section
-   at the bottom of each CAR tab recommending which trade to award
+1. Generate Scope: runs drawing indexing and spec extraction together
+   in one step. The estimator labels each uploaded PDF as Drawings,
+   Specifications, Statement of Work, Hazmat Report, or Other.
+   Drawing files go through Phase 1 image processing. Spec files go
+   through Phase 2 text extraction. Both outputs save to the project
+   folder as drawing_index.json and scope_summary.txt and persist
+   between sessions.
+2. Generate Appendix B: uses the stored drawing index and spec
+   summary to produce the Appendix B Word document for the selected
+   trade or division.
+3. Populate CAR: reads uploaded trade quotes, maps inclusions and
+   exclusions against Appendix B scope items, and populates the CAR
+   Excel tab for the selected trade. The AI flags scope gaps and
+   discrepancies between bidders but does NOT generate dollar amounts
+   for missing scope. Subtotal B exclusion rows have descriptions
+   filled in but dollar amounts left blank for the estimator to price.
+   Subtotal C associated work rows are also left blank for the
+   estimator. This workflow is not yet built.
 
 ---
 
@@ -96,6 +106,7 @@ estimators and must not be modified by the tool.
   9. GWB
   9. Flooring
   9. Paint
+  14. Conveying Systems
   15. Mechanical
   16. Electrical
 
@@ -111,18 +122,18 @@ Generated files follow the naming conventions observed in completed
 project files.
 
 Appendix B (Word document):
-  [Project#]_-_[Project Name]_-_Appendix_B_-_[Trade Name].docx
-  Example: 5246_-_Marpole_Library_-_Appendix_B_-_Lincor.docx
+  [Project#] - [Project Name] - Appendix B - [Subcontractor Name].docx
+  Example: 5246 - Marpole Library - Appendix B - Lincor.docx
+  If no subcontractor name is entered, Trade or Division is used.
 
 CAR (Excel workbook):
-  [Project#]_-_[Project Name]_-_LIVE.xlsx
-  Example: 5246_-_Marpole_Library_Expansion_R1_-_LIVE.xlsx
+  [Project#] - [Project Name] - LIVE.xlsx
+  Example: 5246 - Marpole Library Expansion R1 - LIVE.xlsx
 
-The project number and project name are entered by the estimator
-at project setup in the UI. The field is labeled Project Number,
-not Contract Number. The trade name on each Appendix B is the
-awarded subcontractor name, entered when the document is
-finalized.
+File names use spaces not underscores. The project number and project
+name are entered at project setup. The Subcontractor Name field is
+left blank until contract award. The Trade or Division dropdown
+selects which trade the document is being generated for.
 
 ---
 
@@ -370,9 +381,10 @@ from UI inputs.
 - This is the leveled comparable total used for award decisions
 
 ### Comments Section
-- Award recommendation and rationale in plain language
-- AI generates a draft based on adjusted totals, scope gaps, and
-  notable inclusions or exclusions flagged during bid review
+- Left blank for the estimator to complete
+- The AI does not generate award recommendations
+- The estimator reviews the populated CAR and makes the award
+  decision using their own judgment and market knowledge
 
 ---
 
@@ -521,6 +533,96 @@ Provision cost: approximately $4,000 to $5,000 USD per project.
 - Prototype hosted locally during development and testing
 - No real project data on publicly accessible servers
 - .env must be listed in .gitignore before first commit
+
+---
+
+## Project Management System
+Each project gets its own subfolder under projects/ named by project
+number. All generated files for that project save into its folder.
+
+Folder structure:
+  projects/
+    5246/
+      project_info.json  (project number and name)
+      drawing_index.json (Phase 1 output, reused across sessions)
+      scope_summary.txt  (Phase 2 output, reused across sessions)
+
+On startup the app scans the projects/ folder and populates a Load
+Existing Project dropdown. Selecting a project and clicking Load
+restores the project number, name, drawing index, and scope summary
+into session state.
+
+New Project clears all project session state except entity and
+project type checkboxes which persist.
+
+Delete Project shows a confirmation dialog requiring the user to
+type DELETE (case sensitive) before the project folder and all its
+contents are permanently removed. Deleted project numbers are stored
+in a session-level recently deleted set to prevent the folder from
+being recreated by stale widget state during the same session.
+
+---
+
+## UI Layout and Sidebar Order
+Sidebar top to bottom:
+1. Project Number input
+2. Project Name input
+3. Load Existing Project dropdown with Load button
+4. New Project button
+5. Delete Project button (only shown when a project is loaded)
+6. Divider
+7. Entity Name checkboxes (mutually exclusive)
+8. Project Type checkboxes (mutually exclusive)
+9. Divider
+10. Trade or Division dropdown (19 options matching CAR tabs)
+11. Subcontractor Name input (used in filename at award only)
+12. Divider
+13. Project Level Notes text area
+14. Division Level Notes text area
+
+Main panel:
+- Multi-file PDF uploader with file type selector per file
+  (Drawings, Specifications, Statement of Work, Hazmat Report, Other)
+- Three action buttons: Generate Scope, Generate Appendix B,
+  Populate CAR
+- Output display area showing generated content
+- Download buttons appear after successful generation
+
+---
+
+## Division Verb Phrase Lookup
+Each division uses a specific verb phrase in the item 56 intro
+sentence. The lookup table is:
+
+  2. Demo and Abatement    -> complete
+  2. Demolition            -> complete
+  2. Excavating            -> complete
+  2. Landscaping           -> complete
+  3. Concrete Works        -> complete
+  4. Masonry               -> supply and install
+  5. Steel                 -> supply and install
+  6. Framing               -> supply and install
+  6. Millwork              -> supply and install
+  7. Roofing               -> supply and install
+  7. Cladding              -> supply and install
+  8. Doors                 -> supply and install
+  8. Glazing               -> supply and install
+  9. GWB                   -> supply and install
+  9. Flooring              -> supply and install
+  9. Paint                 -> supply and application of
+  14. Conveying Systems    -> supply and install
+  15. Mechanical           -> supply and install
+  16. Electrical           -> supply and install
+
+For "supply and application of" trades the sentence reads:
+"Provide all labour, materials and equipment for the supply and
+application of [intro_text], in accordance with drawings and
+specifications, including, but not limited to:"
+
+For all other trades:
+"Provide all labour, materials and equipment to [verb] [intro_text],
+in accordance with drawings and specifications, including, but not
+limited to:"
 
 ---
 
