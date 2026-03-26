@@ -6,12 +6,17 @@ import base64
 import json
 import os
 import re
+from io import BytesIO
 from pathlib import Path
 
+from docx import Document
 import fitz
 import streamlit as st
 from anthropic import Anthropic
 from dotenv import load_dotenv
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font
+from openpyxl.utils import get_column_letter
 
 SPEC_PARSE_SYSTEM_PROMPT = (
     "You are an expert construction estimator working for a general "
@@ -42,6 +47,101 @@ DRAWING_INDEX_PATH = Path(__file__).resolve().parent / "drawing_index.json"
 
 DRAWING_PAGE_RENDER_DPI = 150
 INDEX_BATCH_SIZE = 3
+
+
+def _sanitize_filename(value: str) -> str:
+    """Make a Windows-safe filename segment."""
+    value = value.strip()
+    if not value:
+        return "Unknown"
+    # Replace invalid Windows filename characters: <>:"/\|?*
+    value = re.sub(r'[<>:"/\\|?*]+', "_", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+def _project_filename(project_number: str, project_name: str, suffix: str, ext: str) -> str:
+    num = _sanitize_filename(project_number) if project_number else "Unknown"
+    name = _sanitize_filename(project_name) if project_name else "Unknown"
+    return f"{num}_-_{name}_-_{suffix}.{ext}"
+
+
+def _stringify_cell(value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (int, float, bool)):
+        return str(value)
+    # For lists/dicts returned by the model, store them as readable JSON.
+    try:
+        return json.dumps(value, ensure_ascii=False)
+    except Exception:
+        return str(value)
+
+
+def _scope_items_to_docx_bytes(scope_items_text: str) -> bytes:
+    doc = Document()
+    doc.add_heading("Scope Summary", level=1)
+    doc.add_paragraph("Extracted Scope Items")
+
+    for line in scope_items_text.splitlines():
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+        doc.add_paragraph(cleaned, style="List Bullet")
+
+    buf = BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+def _drawing_index_to_xlsx_bytes(drawing_index: list[dict]) -> bytes:
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Drawing Index"
+
+    headers = [
+        "Sheet Number",
+        "Title",
+        "Discipline",
+        "Trades Referenced",
+        "Scope Notes",
+        "Cross References",
+    ]
+    ws.append(headers)
+
+    header_font = Font(bold=True)
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    for item in drawing_index:
+        ws.append(
+            [
+                _stringify_cell(item.get("sheet_number", "")),
+                _stringify_cell(item.get("drawing_title", "")),
+                _stringify_cell(item.get("discipline", "")),
+                _stringify_cell(item.get("trades_referenced", "")),
+                _stringify_cell(item.get("scope_notes", "")),
+                _stringify_cell(item.get("cross_references", "")),
+            ]
+        )
+
+    # Basic column width sizing
+    for col_idx, header in enumerate(headers, start=1):
+        max_len = len(header)
+        for row_idx in range(2, ws.max_row + 1):
+            cell_val = ws.cell(row=row_idx, column=col_idx).value
+            if cell_val is None:
+                continue
+            max_len = max(max_len, len(str(cell_val)))
+        ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 60)
+
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
 
 
 def load_env_from_dotenv() -> str | None:
@@ -116,7 +216,7 @@ def _build_index_batch_content(png_pages: list[bytes]) -> list[dict]:
     return blocks
 
 
-def index_drawings(pdf_bytes: bytes) -> None:
+def index_drawings(pdf_bytes: bytes, project_number: str, project_name: str) -> None:
     """
     Render each page as a high-res image, index in batches of three via Claude,
     merge into `drawing_index.json`, and show a summary in the main panel.
@@ -203,6 +303,21 @@ def index_drawings(pdf_bytes: bytes) -> None:
     ]
     st.dataframe(table_rows, use_container_width=True, hide_index=True)
 
+    try:
+        with open(DRAWING_INDEX_PATH, "r", encoding="utf-8") as f:
+            drawing_index_data = json.load(f)
+    except Exception as exc:
+        st.error(f"Could not load `{DRAWING_INDEX_PATH.name}` for Excel export: {exc}")
+        return
+
+    xlsx_bytes = _drawing_index_to_xlsx_bytes(drawing_index_data)
+    st.download_button(
+        label="Download Drawing Index (.xlsx)",
+        data=xlsx_bytes,
+        file_name=_project_filename(project_number, project_name, "Drawing_Index", "xlsx"),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
 
 def parse_spec_division(spec_text: str) -> None:
     """
@@ -247,8 +362,12 @@ def parse_spec_division(spec_text: str) -> None:
             reply_parts.append(block.text)
     result = "".join(reply_parts)
 
+    st.session_state["extracted_scope_items_text"] = result
+
     st.subheader("Extracted Scope Items")
     st.markdown(result)
+
+    return result
 
 ENTITY_OPTIONS = [
     "SCOTT Construction Ltd",
@@ -379,6 +498,16 @@ if scope_summary_clicked:
                 combined_chunks.append(extract_pdf_text(f.getvalue()))
                 combined_chunks.append("\n\n")
             parse_spec_division("".join(combined_chunks))
+
+            scope_items_text = st.session_state.get("extracted_scope_items_text")
+            if scope_items_text:
+                docx_bytes = _scope_items_to_docx_bytes(scope_items_text)
+                st.download_button(
+                    label="Download Scope Summary (.docx)",
+                    data=docx_bytes,
+                    file_name=_project_filename(project_number, project_name, "Scope_Summary", "docx"),
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
         except Exception as exc:
             st.error(f"Could not read or process PDFs: {exc}")
 
@@ -387,6 +516,6 @@ if index_drawings_clicked:
         st.warning("Upload at least one PDF.")
     else:
         try:
-            index_drawings(uploaded_pdfs[0].getvalue())
+            index_drawings(uploaded_pdfs[0].getvalue(), project_number, project_name)
         except Exception as exc:
             st.error(f"Could not index drawings: {exc}")

@@ -4,32 +4,33 @@
     "discipline": "Architectural",
     "drawing_title": "Level 01 Reflected Ceiling Plan",
     "trades_referenced": [
-      "Mechanical (HVAC - supply/exhaust air grilles, ducts)",
-      "Electrical (lighting - ceiling mounted troffer, suspended linear, recessed linear, feature pendant, cove, pot lights)",
-      "Fire Protection (FRR ratings - 1hr, 40 Min)",
-      "Acoustic (ACT ceiling tiles, acoustic wood slat panels)"
+      "Electrical",
+      "Mechanical",
+      "Acoustic",
+      "Framing/Suspension"
     ],
     "scope_notes": [
-      "Level 01 Reflected Ceiling Plan at 1:100 scale",
-      "Ceiling assemblies scheduled: XC1 (Existing), C1 (Gypsum Wall Board), C2 (Suspended 2x4 ACT1 - NRC 0.7), C3 (Suspended 3x2 ACT2 - NRC 0.7), C4 (Acoustic Wood Slat Panel - NRC 0.7), C5 (Rated Ceiling - 1hr FRR), C6 (Suspended Acoustic Ceiling Lid with 2x4 ACT1 - NRC 0.7), C7 (Suspended Gypsum Wall Board Ceiling)",
-      "Ceiling heights noted throughout plan (e.g., +3500, +3550, +3960, +2400, +3525, +2326)",
-      "Ceiling in Electrical Rooms to be rated: 1HR FRR",
-      "Ceiling in Janitor Room to be rated: 40 Min FRR",
+      "Level 01 Ceiling Plan at 1:100 scale",
+      "Multiple ceiling assembly types indicated: XC1 (Existing), C1 (Gypsum Wall Board), C2 (Suspended 2x4 ACT1 Acoustic Ceiling Tile, NRC 0.7), C3 (Suspended 3x4 ACT2 Acoustic Ceiling Tile, NRC 0.7), C4 (Acoustic Wood Slat Panel System, NRC 0.7), C5 (Rated Ceiling, 1hr FRR), C6 (Suspended Acoustic Ceiling Lid with 2x4 ACT1, NRC 0.7), C7 (Suspended Gypsum Wall Board Ceiling)",
+      "Ceiling heights noted throughout plan with prefix '+' values (e.g., +3550, +3960, +2400, +2325)",
+      "Electrical Rooms ceiling to be rated: 1HR FRR noted",
+      "Ceiling in Janitor Room to be rated: 40 Min FRR noted",
       "Patch and repair existing ceiling as required noted on west side",
-      "Align edge of ceiling to existing storefront wall",
-      "Bulkhead wall transition between different ceiling heights",
-      "Program Room, Meeting Rooms, Kids area, Bank Processing, Stacks, Adult Lounge, Branch Head Office, Washrooms all identified",
-      "Second floor beam above noted",
-      "RCP Legend includes: Ceiling Mounted Troffer Light, Suspended Linear Light, Recessed Linear Light, Feature Pendant Light, Reception Feature Light, Cove Light, Return/Exhaust Air Grille, Supply/Outdoor Air Duct, Sensor, Room Temperature Sensor",
-      "General notes reference Mechanical and Electrical drawings; all exposed louvres/diffusers to be primed and painted; access panels to Consultant's selection"
+      "Align edge of ceiling to existing storefront wall noted",
+      "Bulkhead wall transition between different ceiling heights noted",
+      "RCP Legend includes: Ceiling Mounted Troffer Light, Suspended Linear Light, Recessed Linear Light, Recessed Pot Light, Feature Pendant Light, Reception Feature Light, Cove Light, Return/Exhaust Air Grille, Supply/Outdoor Air Duct, Sensor, Room Temperature Sensor",
+      "Rooms identified include: Program Room, Meeting Rooms, Kids, Bank Processing, Branch Head Office, Mezzanine WC, Electrical Vault, Stacks, Adult Lounge, Electrical room",
+      "C4+1500 notation indicating ceiling level offset in main area",
+      "Second floor beam above notation referenced",
+      "All exposed louvres, diffusers, grilles and access panels to be primed and painted per Consultant's selection (General Note)"
     ],
     "cross_references": [
-      "Mechanical drawings (for HVAC coordination)",
-      "Electrical drawings (for lighting coordination)",
-      "Ceiling Assembly Details (referenced within schedule)",
-      "SLC WHE2 System-A (referenced for C6 assembly)",
-      "Project: VPL Marpole Library",
-      "Drawing A-22-1-013 revision 4, dated 25/06/26"
+      "Mechanical drawings (See also Mechanical + Electrical drawings)",
+      "Electrical drawings",
+      "Ceiling Assembly detail references",
+      "SLC WHZ System-A referenced for C5 rated ceiling",
+      "HCABC standards referenced implicitly",
+      "A-22-1-013 sheet series"
     ]
   },
   {
@@ -37,35 +38,31 @@
     "discipline": "Architectural",
     "drawing_title": "Building Sections",
     "trades_referenced": [
-      "Structural (structural upgrade scope, trusses, mezzanine framing)",
-      "Mechanical (New RTU - See Mech drawings)",
-      "Roofing (roof penetrations, parapet restraint detail)",
-      "Civil/Structural (neighbouring building interface)"
+      "Structural",
+      "Mechanical",
+      "Roofing",
+      "Glazing"
     ],
     "scope_notes": [
-      "Five building sections at 1:100 scale",
-      "Section 1: East-West Section Through Mezzanine",
-      "Section 2: North-South Section Through Public Area",
-      "Section 3: North-South Section Through Children's and Stacks",
-      "Section 4: East-West Section Through Main Entrance",
-      "Section 5: East-West Section Through Adult Collection",
-      "Key elevations noted: RL 32.080 Main Floor, RL 30.163 Mezzanine Level, RL 30.853 / 30.163 US of Truss, RL 35.738 top of structure",
-      "Structural upgrade scope only - See Struct noted on multiple sections",
-      "New RTU locations noted - See Mech on Sections 4 and 5",
-      "All roof penetrations and curbs to be coordinated to BCABC standards (Section 4)",
-      "Parapet restraint detail reference: see L.A-31-4-000",
-      "Mezzanine visible in multiple sections with mezzanine level indicated",
-      "Neighbouring building interfaces shown on north and south sides",
-      "Program Room, Kids, Book Processing, Branch Head Office, Stacks, Service Desk, Adult Lounge, Meeting Room 2 spaces identified in sections",
-      "East stair noted as NIC (Not in Contract) in Section 1",
-      "Scope of work boundary indicated with dashed lines"
+      "Five building sections all at 1:100 scale",
+      "Section 1: East-West Section Through Mezzanine - shows mezzanine level, main floor, scope of work boundary, structural elements",
+      "Section 2: North-South Section Through Public Area - shows arched roof truss structure, mezzanine, adult lounge, program room, neighbouring buildings on both sides",
+      "Section 3: North-South Section Through Children's and Stacks - shows arched roof truss, mezzanine, service desk, stacks area, children's area, neighbouring buildings",
+      "Section 4: East-West Section Through Main Entrance - shows program room, kids area, book processing, mezzanine level, new RTU (See Mech), all roof penetrations and curbs to be completed to HCABC standards, structural upgrade scope only noted",
+      "Section 5: East-West Section Through Adult Collection - shows main processing, branch head office, mezzanine level, new RTU (See Mech), structural upgrade scope noted, parapet restraint detail reference",
+      "Key elevations noted: RL2.080 Main Floor, RL5.163 Mezzanine, RL5.738 US of Truss (approx)",
+      "Scope of work boundaries clearly delineated with dashed lines",
+      "Structural upgrade scope only - See Struct noted in multiple sections",
+      "New RTU - See Mech noted in sections 4 and 5",
+      "East stair NIC noted in Section 1",
+      "Neighbouring buildings shown on both sides in N-S sections"
     ],
     "cross_references": [
-      "Structural drawings (structural upgrade scope)",
-      "Mechanical drawings (New RTU locations)",
-      "L.A-31-4-000 (Parapet restraint detail)",
-      "Project: VPL Marpole Library",
-      "Drawing A-22-2-010 revision 4, dated 25/06/26"
+      "Structural drawings (See Struct)",
+      "Mechanical drawings (See Mech) for RTU locations",
+      "L.A-31-4-000 for parapet restraint detail",
+      "HCABC standards for roof penetrations and curbs",
+      "A-22-2-010 sheet series"
     ]
   },
   {
@@ -73,39 +70,43 @@
     "discipline": "Architectural",
     "drawing_title": "Door Schedule & Room Finish Schedule",
     "trades_referenced": [
-      "Doors and Hardware (hollow metal, wood, storefront)",
-      "Painting (PT01-PT010 paint finishes, various colours)",
-      "Flooring (RF1 Resilient Floor Grey, RF2 Resilient Floor Blue)",
-      "Wall Base (B1 Rubber Base Grey, B2 Rubber Base Blue)",
-      "Acoustic (ACT1 White, ACT2 Blue acoustic ceiling tiles)",
-      "Glazing (glazed interior storefront, tempered safety glass)",
-      "Security/Access Control (deadbolt, occupancy indicators, keyed locks)",
-      "Fire Protection (fire-rated door assemblies - 45min FRR)",
-      "Electrical (electric strikes, access control coordination)"
+      "Doors/Hardware",
+      "Flooring",
+      "Painting",
+      "Acoustic",
+      "Glazing",
+      "Electrical",
+      "Security",
+      "Mechanical"
     ],
     "scope_notes": [
       "Door Schedule covers Main Floor and Second Floor doors",
-      "Door types: A (Solid Core Wood Non-Rated), B (Solid Core Wood Fire Rated - 45min assembly), C (Hollow Metal Non-Rated), D (Hollow Metal Fire Rated), E (Insulated Metal Door), F (Glazed Interior Storefront), G (Double Door Hollow Core Metal)",
-      "Standard door size: 915 wide x 2135 high for most interior doors",
-      "Materials include: AMO (aluminium), HM (hollow metal), WD (wood), AL (aluminium), PTDB/PTDD/PTDE finishes",
-      "Hardware Groups 1-18 referenced",
-      "Door schedule notes include: deadbolt with occupancy indicators, acoustic rated perimeter seals, key locks, bolt permanently/remove functionality, new ADO on existing doors",
-      "Existing Storefront doors noted for E002-E007 series",
-      "Room Finish Schedule covers all Main Floor rooms: Lobby, Meeting Rooms, Kids, Program Room, Stacks, W/C, Staff W/C, Lunch Room, Janitor, Branch Head Office, Book Processing, Electrical, VPL Storage, Closets",
-      "Room finish legend: RF1/RF2 floors, B1/B2 wall base, PT01-PT010 interior paints (White, Salmon Peach, Light Blue, Light Yellow, Medium Blue, Blue Grey, Salmon, Dark Grey), TL Wall Tile, GL Glazing, HPL Laminate Grey, PLY Plywood, PLY2 Plywood Painted, MDO Medium Density Overlay",
-      "Ceiling finishes: PT01, ACT1, ACT2",
-      "Special notes: Wall protection per drawings, intumescent paint on exposed columns to achieve 45min FRR",
-      "Phase Created noted for each door (Stage 3, Stage 5 etc.)",
-      "Door schedule notes reference: A-72-4-000 for visibility graphic kit, A-31-11 December 2023 accessibility compliance"
+      "Door types identified: Type A (Solid Core Wood - Non Raised), Type B (Solid Core Wood - Fire Rated), Type C (Hollow Core Metal - Non Raised), Type D (Hollow Metal - Fire Rated), Type E (Insulated Metal Door), Type F (Glazed Interior Storefront), Type G (Double Door - Hollow Core Metal)",
+      "Door sizes predominantly 915x2135mm and 965x2135mm",
+      "FRR ratings noted: 30MIN and 45MIN for applicable doors",
+      "Hardware Groups 1 through 18 referenced",
+      "Phase Created column noted (Stage 3, Stage 5 etc.)",
+      "Acoustic rated perimeter door seals noted for several doors (Groups 3, 4, etc.)",
+      "Deadbolt with occupancy indicators noted for WC doors",
+      "Key lock and key back functions noted for various doors",
+      "Existing storefronts identified for several entry/exit doors",
+      "Room Finish Schedule covers Main Floor rooms including: Public, Meeting Rooms, Kids, Program Room, W/C, Stacks, Staff WC, Lunch Room, Janitor, Branch Head Office, Electrical, VPL Storage, Electrical Vault, Closets",
+      "Room finish legend includes: RF1/RF2 Resilient Floor (Grey/Blue), B1/B2 Rubber Base, Paint colours PT01-PT010 (White, Salmon Peach, Light Blue, Light Grey, Light Yellow, Blue Grey, Salmon, Dark Gray), TL Wall Tile, ACT1/ACT2 Acoustic Ceiling Tile (White/Blue), MI Mirror, HP2 Laminate - Grey, PLY1/PLY2 Plywood, PDO Perforated Density Overlay",
+      "Wall protection noted at various heights (925mm, 1200mm AFF, corner protection)",
+      "Plywood backing for equipment noted",
+      "Door Schedule Notes include 15 items covering compliance, hardware, acoustic, security, glazing, fire rating requirements",
+      "Hardware Notes include 7 items covering commercial grade hardware, closer requirements, locks, security systems"
     ],
     "cross_references": [
-      "A-72-4-000 (Visibility graphic kit / sightlines)",
-      "A-31-11 (Accessibility - December 2023 Guidelines for Accessible and Wayfinding Spaces Version 1.1)",
-      "Architectural plans and elevations (for door locations)",
-      "Hardware supplier specifications",
-      "Contract documents and specifications",
-      "Project: VPL Marpole Library",
-      "Drawing A-22-7-000 revision 3, dated 25/08/01"
+      "All contract documents and specifications",
+      "Architectural plans and elevations",
+      "Interior elevations",
+      "Window types and glazing schedules",
+      "A-72-4-004 for visibility graphic size",
+      "VPL Guidelines for Accessible and Welcoming Spaces Version 1.1 December 2023",
+      "BC Building Code Section 11",
+      "Mechanical + Electrical drawings",
+      "A-22-7-000 sheet series"
     ]
   }
 ]
