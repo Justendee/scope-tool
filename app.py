@@ -189,8 +189,27 @@ INDEX_DRAWINGS_USER_PROMPT = (
     "Return a JSON array with one object per sheet."
 )
 
-DRAWING_INDEX_PATH = Path(__file__).resolve().parent / "drawing_index.json"
-SCOPE_SUMMARY_PATH = Path(__file__).resolve().parent / "scope_summary.txt"
+PROJECTS_DIR = Path(__file__).resolve().parent / "projects"
+PROJECTS_DIR.mkdir(exist_ok=True)
+
+# Fallback paths for when no project is active (backward-compat)
+_APP_DIR = Path(__file__).resolve().parent
+
+
+def _get_project_folder(project_number: str) -> Path:
+    """Return the folder path for project_number, or the app root.
+
+    This function is PURE PATH COMPUTATION — it never creates the folder.
+    Call folder.mkdir(parents=True, exist_ok=True) explicitly at the point
+    where files are actually being written.
+    """
+    safe = (project_number or "").strip()
+    if not safe:
+        return _APP_DIR
+    safe = re.sub(r'[<>:"/\\|?*\s]+', "_", safe).strip("_")
+    if not safe:
+        return _APP_DIR
+    return PROJECTS_DIR / safe
 
 DRAWING_PAGE_RENDER_DPI = 150
 INDEX_BATCH_SIZE = 3
@@ -698,18 +717,26 @@ def load_env_from_dotenv() -> str | None:
 
 ANTHROPIC_API_KEY = load_env_from_dotenv()
 
-# Restore scope summary from disk on startup so it survives server restarts.
-if (
-    "extracted_scope_items_text" not in st.session_state
-    and SCOPE_SUMMARY_PATH.exists()
-):
-    try:
-        _saved = SCOPE_SUMMARY_PATH.read_text(encoding="utf-8").strip()
-        if _saved:
-            st.session_state["extracted_scope_items_text"] = _saved
-            st.session_state["scope_summary_ready"] = True
-    except OSError:
-        pass
+def _restore_project_files(project_folder: Path) -> None:
+    """Load scope_summary.txt and drawing_index.json from folder into session state."""
+    if "extracted_scope_items_text" not in st.session_state:
+        _ss = project_folder / "scope_summary.txt"
+        if _ss.exists():
+            try:
+                _saved = _ss.read_text(encoding="utf-8").strip()
+                if _saved:
+                    st.session_state["extracted_scope_items_text"] = _saved
+                    st.session_state["scope_summary_ready"] = True
+            except OSError:
+                pass
+    _di = project_folder / "drawing_index.json"
+    if _di.exists():
+        try:
+            _data = json.loads(_di.read_text(encoding="utf-8"))
+            if isinstance(_data, list) and _data:
+                st.session_state["drawing_index_ready"] = True
+        except Exception:
+            pass
 
 
 def extract_pdf_text(pdf_bytes: bytes) -> str:
@@ -775,11 +802,21 @@ def _build_index_batch_content(png_pages: list[bytes]) -> list[dict]:
     return blocks
 
 
-def index_drawings(pdf_bytes: bytes, project_number: str, project_name: str) -> None:
+def index_drawings(
+    pdf_bytes: bytes,
+    project_number: str,
+    project_name: str,
+    project_folder: Path | None = None,
+) -> None:
     """
     Render each page as a high-res image, index in batches of three via Claude,
-    merge into `drawing_index.json`, and show a summary in the main panel.
+    merge into `drawing_index.json` in project_folder, and show a summary.
     """
+    if project_folder is None:
+        project_folder = _get_project_folder(project_number)
+    # Ensure folder exists before writing drawing_index.json
+    if project_folder != _APP_DIR:
+        project_folder.mkdir(parents=True, exist_ok=True)
     if not ANTHROPIC_API_KEY:
         st.error(
             "ANTHROPIC_API_KEY is not set. Add it to your `.env` file in the "
@@ -838,16 +875,17 @@ def index_drawings(pdf_bytes: bytes, project_number: str, project_name: str) -> 
 
     progress_slot.empty()
 
+    _drawing_index_path = project_folder / "drawing_index.json"
     try:
-        with open(DRAWING_INDEX_PATH, "w", encoding="utf-8") as f:
+        with open(_drawing_index_path, "w", encoding="utf-8") as f:
             json.dump(combined, f, indent=2, ensure_ascii=False)
     except OSError as exc:
-        st.error(f"Could not write {DRAWING_INDEX_PATH}: {exc}")
+        st.error(f"Could not write {_drawing_index_path}: {exc}")
         return
 
     st.session_state["drawing_index_ready"] = True
 
-    st.success(f"Saved drawing index to `{DRAWING_INDEX_PATH.name}`.")
+    st.success(f"Saved drawing index to `{_drawing_index_path.name}`.")
 
     st.subheader("Drawing index summary")
     st.write(
@@ -865,10 +903,9 @@ def index_drawings(pdf_bytes: bytes, project_number: str, project_name: str) -> 
     st.dataframe(table_rows, use_container_width=True, hide_index=True)
 
     try:
-        with open(DRAWING_INDEX_PATH, "r", encoding="utf-8") as f:
-            drawing_index_data = json.load(f)
+        drawing_index_data = json.loads(_drawing_index_path.read_text(encoding="utf-8"))
     except Exception as exc:
-        st.error(f"Could not load `{DRAWING_INDEX_PATH.name}` for Excel export: {exc}")
+        st.error(f"Could not load `{_drawing_index_path.name}` for Excel export: {exc}")
         return
 
     xlsx_bytes = _drawing_index_to_xlsx_bytes(drawing_index_data)
@@ -887,10 +924,10 @@ def index_drawings(pdf_bytes: bytes, project_number: str, project_name: str) -> 
     )
 
 
-def parse_spec_division(spec_text: str) -> None:
+def parse_spec_division(spec_text: str, project_folder: Path | None = None) -> None:
     """
     Send extracted specification text to Claude and show scope items in the
-    main panel.
+    main panel. Saves scope_summary.txt to project_folder.
     """
     if not ANTHROPIC_API_KEY:
         st.error(
@@ -933,8 +970,12 @@ def parse_spec_division(spec_text: str) -> None:
     st.session_state["extracted_scope_items_text"] = result
     st.session_state["scope_summary_ready"] = True
 
+    _scope_path = (project_folder or _APP_DIR) / "scope_summary.txt"
     try:
-        SCOPE_SUMMARY_PATH.write_text(result, encoding="utf-8")
+        # Ensure folder exists before writing (folder creation is intentional here)
+        if project_folder and project_folder != _APP_DIR:
+            project_folder.mkdir(parents=True, exist_ok=True)
+        _scope_path.write_text(result, encoding="utf-8")
     except OSError as exc:
         st.warning(f"Could not save scope summary to disk: {exc}")
 
@@ -949,11 +990,12 @@ def _has_scope_summary_output() -> bool:
     return bool(t and str(t).strip())
 
 
-def _has_drawing_index_file() -> bool:
-    if not DRAWING_INDEX_PATH.exists():
+def _has_drawing_index_file(project_folder: Path | None = None) -> bool:
+    path = (project_folder or _APP_DIR) / "drawing_index.json"
+    if not path.exists():
         return False
     try:
-        data = json.loads(DRAWING_INDEX_PATH.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
         return isinstance(data, list) and len(data) > 0
     except Exception:
         return False
@@ -963,11 +1005,14 @@ def generate_appendix_b(
     project_notes: str,
     division_notes: str,
     trade_or_division: str,
+    project_folder: Path | None = None,
 ) -> None:
     """
     Build Appendix B Item 56 scope from scope summary, drawing index,
     and estimator notes via Claude.
     """
+    if project_folder is None:
+        project_folder = _APP_DIR
     if not ANTHROPIC_API_KEY:
         st.error(
             "ANTHROPIC_API_KEY is not set. Add it to your `.env` file in the "
@@ -980,10 +1025,11 @@ def generate_appendix_b(
         st.warning("No extracted specification scope text found. Run Generate Scope Summary first.")
         return
 
+    _di_path = project_folder / "drawing_index.json"
     try:
-        drawing_data = json.loads(DRAWING_INDEX_PATH.read_text(encoding="utf-8"))
+        drawing_data = json.loads(_di_path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        st.warning("drawing_index.json not found. Run Index Drawings first.")
+        st.warning("drawing_index.json not found. Run Generate Scope first.")
         return
     except Exception as exc:
         st.error(f"Could not read drawing index: {exc}")
@@ -1102,38 +1148,35 @@ DIVISION_VERB_PHRASES: dict[str, str] = {
 }
 
 
-def _init_exclusive_group(prefix: str, options: list[str], default: str) -> None:
-    if f"{prefix}_inited" not in st.session_state:
-        st.session_state[f"{prefix}_value"] = default
-        for o in options:
-            st.session_state[f"{prefix}_{o}"] = o == default
-        st.session_state[f"{prefix}_inited"] = True
-
-
 def _exclusive_checkboxes(prefix: str, options: list[str]) -> str:
-    _init_exclusive_group(prefix, options, options[0])
+    """
+    Render mutually exclusive checkboxes.
+    Mutual exclusion is enforced via on_change callbacks, which fire at the
+    START of the next script run before any widgets are rendered, making it
+    safe to write to other widget-bound keys from within them.
+    """
     for opt in options:
-        checked = st.checkbox(
-            opt,
-            key=f"{prefix}_{opt}",
-        )
-        if checked and st.session_state[f"{prefix}_value"] != opt:
-            st.session_state[f"{prefix}_value"] = opt
-            for o in options:
-                st.session_state[f"{prefix}_{o}"] = o == opt
-            st.rerun()
-
-    selected = [opt for opt in options if st.session_state.get(f"{prefix}_{opt}", False)]
-    if len(selected) == 0:
-        st.session_state[f"{prefix}_value"] = options[0]
-        for o in options:
-            st.session_state[f"{prefix}_{o}"] = o == options[0]
-        st.rerun()
-    if len(selected) >= 1:
-        st.session_state[f"{prefix}_value"] = selected[0]
-    return st.session_state[f"{prefix}_value"]
+        def _on_change(selected=opt):
+            if st.session_state.get(f"{prefix}_{selected}"):
+                # Just checked: uncheck all others, record value
+                for o in options:
+                    if o != selected:
+                        st.session_state[f"{prefix}_{o}"] = False
+                st.session_state[f"{prefix}_value"] = selected
+            else:
+                # Just unchecked: if nothing else is checked, restore it
+                if not any(
+                    st.session_state.get(f"{prefix}_{o}") for o in options if o != selected
+                ):
+                    st.session_state[f"{prefix}_{selected}"] = True
+        st.checkbox(opt, key=f"{prefix}_{opt}", on_change=_on_change)
+    return st.session_state.get(f"{prefix}_value", options[0])
 
 
+# ── File-type labels for the uploader ────────────────────────────────────────
+FILE_TYPE_OPTIONS = ["Drawings", "Specifications", "Statement of Work", "Hazmat Report", "Other"]
+
+# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Scope Management Tool",
     page_icon="📐",
@@ -1142,32 +1185,218 @@ st.set_page_config(
 
 st.title("AI Assisted Scope Management")
 
+# ── One-time checkbox state initialization (must run before widgets render) ──
+# Populates the keys used by st.checkbox in _exclusive_checkboxes so that
+# Streamlit sees them already present before the widgets are instantiated.
+for _o in ENTITY_OPTIONS:
+    _k = f"entity_{_o}"
+    if _k not in st.session_state:
+        st.session_state[_k] = (_o == ENTITY_OPTIONS[0])
+if "entity_value" not in st.session_state:
+    st.session_state["entity_value"] = ENTITY_OPTIONS[0]
+
+for _o in PROJECT_TYPE_OPTIONS:
+    _k = f"ptype_{_o}"
+    if _k not in st.session_state:
+        st.session_state[_k] = (_o == PROJECT_TYPE_OPTIONS[0])
+if "ptype_value" not in st.session_state:
+    st.session_state["ptype_value"] = PROJECT_TYPE_OPTIONS[0]
+
+# ── Apply staged widget values (must run before widgets are instantiated) ────
+# The Load button cannot write to text_input keys after those widgets render,
+# so it stores values in staging keys. We consume them here on the next run.
+if "_staged_project_number" in st.session_state:
+    st.session_state["project_number_input"] = st.session_state.pop("_staged_project_number")
+if "_staged_project_name" in st.session_state:
+    st.session_state["project_name_input"] = st.session_state.pop("_staged_project_name")
+
+# ── Reset load selectbox after deletion ──────────────────────────────────────
+# _staged_load_select is set to None by the _reset_project handler after a
+# deletion. Consuming it here (before the selectbox widget renders) ensures
+# the selectbox defaults to "— select —" even if the browser tries to restore
+# the previously selected (now-deleted) project name.
+if "_staged_load_select" in st.session_state:
+    st.session_state.pop("_staged_load_select")
+    st.session_state.pop("load_project_select", None)  # force selectbox to default
+
+
+# ── Process deferred state-clear requests (must run before any widgets) ──────
+# New Project / Delete Project set "_reset_project" before st.rerun() so that
+# widget-bound keys can be cleared here, before those widgets are rendered.
+if st.session_state.pop("_reset_project", False):
+    import shutil as _shutil
+    _delete_folder = st.session_state.pop("_delete_project_folder", None)
+    print(f"[RESET] _reset_project fired. _delete_folder = {_delete_folder!r}")
+    if _delete_folder:
+        _df_path = Path(_delete_folder)
+        print(f"[RESET] About to delete: {_delete_folder}")
+        print(f"[RESET] Folder exists before deletion: {_df_path.exists()}")
+        if _df_path.exists():
+            try:
+                _shutil.rmtree(_delete_folder)
+                print(f"[RESET] shutil.rmtree completed")
+                print(f"[RESET] Folder still exists after deletion: {_df_path.exists()}")
+                # Record the deleted folder name so the project_info.json save
+                # block can refuse to recreate it, and force the load selectbox
+                # to reset (guards against browser-side widget state restoration).
+                _deleted_name = _df_path.name
+                st.session_state.setdefault("_recently_deleted", set()).add(_deleted_name)
+                st.session_state["_staged_load_select"] = None
+                print(f"[RESET] Recorded {_deleted_name!r} in _recently_deleted (permanent for session)")
+            except Exception as _e:
+                st.error(f"Could not delete project folder: {_e}")
+                print(f"[RESET] rmtree FAILED: {_e}")
+        else:
+            print(f"[RESET] Path does not exist — rmtree skipped")
+    else:
+        # New Project (no deletion): clear the recently-deleted guard so the
+        # user can re-create a project with the same number if they choose to.
+        st.session_state.pop("_recently_deleted", None)
+        print("[RESET] _delete_folder is None — New Project flow; _recently_deleted cleared")
+    # NOTE: entity_* and ptype_* keys are intentionally excluded here.
+    # Those keys are widget-bound and managed by _exclusive_checkboxes.
+    # Clearing them would cause a StreamlitAPIException if their checkboxes
+    # are rendered in the same run.
+    for _k in [
+        "project_number_input", "project_name_input",
+        "extracted_scope_items_text", "scope_summary_ready",
+        "drawing_index_ready", "appendix_b_scope_items",
+        "division_ref", "appendix_b_intro", "file_labels",
+        "load_project_select", "_confirm_delete_input",
+        "_show_delete_confirm",
+    ]:
+        st.session_state.pop(_k, None)
+    # Rerun once more so the sidebar re-renders from scratch with a fresh
+    # disk scan. Without this extra rerun the selectbox options list may
+    # still reflect the pre-deletion state because Streamlit commits widget
+    # trees within a single run before the cleaned session state propagates.
+    st.rerun()
+
+# ── Helper: list existing project folders ────────────────────────────────────
+def _list_projects() -> list[str]:
+    if not PROJECTS_DIR.exists():
+        print("[LIST_PROJECTS] projects/ dir does not exist — returning []")
+        return []
+    result = sorted(
+        d.name for d in PROJECTS_DIR.iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+    )
+    print(f"[LIST_PROJECTS] Scanned disk — found: {result}")
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SIDEBAR
+# ═══════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.header("Project setup")
+    st.header("Project")
 
-    project_number = st.text_input("Project Number", placeholder="e.g. 5246")
-    project_name = st.text_input("Project Name", placeholder="e.g. Marpole Library Expansion")
+    # ── Project number / name ────────────────────────────────────────────────
+    project_number = st.text_input(
+        "Project Number",
+        key="project_number_input",
+        placeholder="e.g. 5246",
+    )
+    project_name = st.text_input(
+        "Project Name",
+        key="project_name_input",
+        placeholder="e.g. Marpole Library Expansion",
+    )
 
+    # Compute active project folder and restore files if project number is set
+    active_project_folder = _get_project_folder(project_number)
+    if project_number:
+        _restore_project_files(active_project_folder)
+
+        # Persist project name to disk so it can be loaded later
+        _pinfo = active_project_folder / "project_info.json"
+        _pname_to_save = project_name.strip()
+        try:
+            _current_info = json.loads(_pinfo.read_text(encoding="utf-8")) if _pinfo.exists() else {}
+        except Exception:
+            _current_info = {}
+        if _pname_to_save and _current_info.get("project_name") != _pname_to_save:
+            _safe_num = re.sub(r'[<>:"/\\|?*\s]+', "_", project_number.strip()).strip("_")
+            # Guard 1: folder name must match the sanitized project number.
+            # If active_project_folder resolved to _APP_DIR (empty/invalid
+            # project number), active_project_folder.name will not equal
+            # _safe_num and the save is skipped.
+            _name_matches = (active_project_folder != _APP_DIR and
+                             active_project_folder.name == _safe_num)
+            # Guard 2: never recreate a folder that was deleted this session.
+            # _recently_deleted is permanent until New Project is clicked.
+            _deleted_set = st.session_state.get("_recently_deleted", set())
+            _recently_deleted_block = _safe_num in _deleted_set
+            if not _name_matches:
+                print(f"[SAVE BLOCKED] project_info.json save for {project_number!r} — folder name mismatch (active={active_project_folder.name!r}, safe_num={_safe_num!r})")
+            elif _recently_deleted_block:
+                print(f"[SAVE BLOCKED] project_info.json save for {project_number!r} — in _recently_deleted")
+            else:
+                print(f"[SAVE] SAVING project_info.json for: {project_number!r}")
+                try:
+                    # Intentional folder creation: user has entered both project
+                    # number and project name, so register the project on disk.
+                    active_project_folder.mkdir(parents=True, exist_ok=True)
+                    _pinfo.write_text(
+                        json.dumps({"project_number": project_number.strip(), "project_name": _pname_to_save}),
+                        encoding="utf-8",
+                    )
+                except OSError:
+                    pass
+
+    # ── Load Existing Project ────────────────────────────────────────────────
+    _existing = _list_projects()
+    if _existing:
+        _load_choice = st.selectbox(
+            "Load Existing Project",
+            options=["— select —"] + _existing,
+            key="load_project_select",
+        )
+        if _load_choice and _load_choice != "— select —":
+            _load_folder = PROJECTS_DIR / _load_choice
+            _pinfo_path = _load_folder / "project_info.json"
+            if st.button("Load", key="btn_load_project"):
+                try:
+                    _info = json.loads(_pinfo_path.read_text(encoding="utf-8")) if _pinfo_path.exists() else {}
+                except Exception:
+                    _info = {}
+                # Use staging keys — writing directly to text_input widget-bound
+                # keys after they've been rendered causes StreamlitAPIException.
+                # The staging keys are consumed at the top of the next run.
+                st.session_state["_staged_project_number"] = _info.get("project_number", _load_choice)
+                st.session_state["_staged_project_name"] = _info.get("project_name", "")
+                # Clear scope/drawing state so fresh restore happens on next run
+                for _k in ["extracted_scope_items_text", "scope_summary_ready", "drawing_index_ready"]:
+                    st.session_state.pop(_k, None)
+                _restore_project_files(_load_folder)
+                st.rerun()
+
+    # ── New Project ──────────────────────────────────────────────────────────
+    if st.button("New Project", key="btn_new_project"):
+        # Only clear non-widget keys immediately; widget-bound keys are cleared
+        # via the _reset_project flag at the top of the next run.
+        for _k in [
+            "extracted_scope_items_text", "scope_summary_ready",
+            "drawing_index_ready", "appendix_b_scope_items",
+            "division_ref", "appendix_b_intro", "file_labels",
+            "_show_delete_confirm",
+        ]:
+            st.session_state.pop(_k, None)
+        st.session_state["_reset_project"] = True
+        st.rerun()
+
+    st.divider()
+
+    # ── Entity / Project type ────────────────────────────────────────────────
     st.subheader("Entity name")
     selected_entity = _exclusive_checkboxes("entity", ENTITY_OPTIONS)
 
     st.subheader("Project type")
     selected_project_type = _exclusive_checkboxes("ptype", PROJECT_TYPE_OPTIONS)
 
-    st.subheader("Estimator notes (project level)")
-    estimator_notes = st.text_area(
-        "Notes that apply to all trades for this project",
-        height=160,
-        placeholder="High-level instructions for scope generation (Phase 1, exclusions, owner-supplied items, etc.)",
-        label_visibility="collapsed",
-    )
+    st.divider()
 
-    st.subheader("Trade / Appendix B")
-    division_notes_trade = st.text_area(
-        "Division Notes for this Trade",
-        height=120,
-        placeholder="Trade-specific scope instructions, exclusions, or clarifications.",
-    )
+    # ── Trade / Appendix B fields ────────────────────────────────────────────
     trade_or_division = st.selectbox(
         "Trade or Division",
         options=DIVISION_TABS,
@@ -1179,93 +1408,211 @@ with st.sidebar:
         placeholder="Leave blank until contract award",
     )
 
+    st.divider()
+
+    # ── Estimator notes ──────────────────────────────────────────────────────
+    st.subheader("Project Level Notes")
+    estimator_notes = st.text_area(
+        "Notes that apply to all trades for this project",
+        height=120,
+        placeholder="Phase constraints, owner-supplied items, global exclusions…",
+        label_visibility="collapsed",
+    )
+
+    st.subheader("Division Level Notes")
+    division_notes_trade = st.text_area(
+        "Division Notes for this Trade",
+        height=100,
+        placeholder="Trade-specific scope instructions, exclusions, or clarifications.",
+        label_visibility="collapsed",
+    )
+
+    # ── Delete Project ────────────────────────────────────────────────────────
+    _proj_folder_exists = (
+        bool(project_number)
+        and (PROJECTS_DIR / re.sub(r'[<>:"/\\|?*\s]+', "_", project_number.strip()).strip("_")).exists()
+    )
+    if _proj_folder_exists:
+        st.divider()
+        if st.button(
+            "🗑 Delete Project",
+            key="btn_delete_project",
+            type="primary",
+            use_container_width=True,
+        ):
+            st.session_state["_show_delete_confirm"] = True
+
+        if st.session_state.get("_show_delete_confirm"):
+            st.warning(
+                f"**Permanently delete project {project_number}?**\n\n"
+                f"This will delete the project folder and all associated files. "
+                f"This cannot be undone."
+            )
+            _confirm_text = st.text_input(
+                'Type **DELETE** to confirm',
+                key="_confirm_delete_input",
+                placeholder="DELETE",
+            )
+            _del_col1, _del_col2 = st.columns(2)
+            with _del_col1:
+                if st.button(
+                    "Confirm Delete",
+                    key="btn_confirm_delete",
+                    disabled=(_confirm_text.strip() != "DELETE"),
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    print(f"[CONFIRM_DELETE] Button handler fired")
+                    print(f"[CONFIRM_DELETE] active_project_folder = {active_project_folder!r}")
+                    print(f"[CONFIRM_DELETE] Folder exists at click time: {active_project_folder.exists()}")
+                    st.session_state["_delete_project_folder"] = str(active_project_folder)
+                    print(f"[CONFIRM_DELETE] Stored _delete_project_folder = {st.session_state['_delete_project_folder']!r}")
+                    st.session_state["_reset_project"] = True
+                    st.session_state["_show_delete_confirm"] = False
+                    st.rerun()
+            with _del_col2:
+                if st.button(
+                    "Cancel",
+                    key="btn_cancel_delete",
+                    use_container_width=True,
+                ):
+                    st.session_state["_show_delete_confirm"] = False
+                    st.rerun()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MAIN PANEL — File upload with type labeling
+# ═══════════════════════════════════════════════════════════════════════════
 st.subheader("Documents")
+
 uploaded_pdfs = st.file_uploader(
-    "Upload project PDFs (drawings, specifications, quotes)",
+    "Upload project PDFs",
     type=["pdf"],
     accept_multiple_files=True,
+    label_visibility="collapsed",
 )
+
+# Per-file type labels stored in session state so they survive reruns
+if "file_labels" not in st.session_state:
+    st.session_state["file_labels"] = {}
+
+drawings_files: list = []
+spec_files: list = []
 
 if uploaded_pdfs:
-    try:
-        first_pdf = uploaded_pdfs[0]
-        extracted = extract_pdf_text(first_pdf.getvalue())
-        preview = extracted[:500]
-        st.caption(
-            f"Extracted text preview (first 500 characters) — **{first_pdf.name}**"
-        )
-        st.text(preview)
-    except Exception as exc:
-        st.error(f"Could not extract text from PDF: {exc}")
+    st.caption("Label each file so it is routed to the correct pipeline:")
+    for _uf in uploaded_pdfs:
+        _col_name, _col_type = st.columns([3, 2])
+        with _col_name:
+            st.write(f"📄 {_uf.name}")
+        with _col_type:
+            _default_idx = 0
+            _prev = st.session_state["file_labels"].get(_uf.name)
+            if _prev and _prev in FILE_TYPE_OPTIONS:
+                _default_idx = FILE_TYPE_OPTIONS.index(_prev)
+            _label = st.selectbox(
+                "Type",
+                options=FILE_TYPE_OPTIONS,
+                index=_default_idx,
+                key=f"file_type_{_uf.name}",
+                label_visibility="collapsed",
+            )
+            st.session_state["file_labels"][_uf.name] = _label
+        if _label == "Drawings":
+            drawings_files.append(_uf)
+        elif _label == "Specifications":
+            spec_files.append(_uf)
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ACTIONS
+# ═══════════════════════════════════════════════════════════════════════════
 st.divider()
-st.subheader("Actions")
-st.caption(
-    "Run Generate Scope Summary and Index Drawings before generating Appendix B."
-)
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    scope_summary_clicked = st.button(
-        "Generate Scope Summary",
-        use_container_width=True,
-    )
-with col2:
+_bcol1, _bcol2, _bcol3 = st.columns(3)
+with _bcol1:
+    generate_scope_clicked = st.button("Generate Scope", use_container_width=True)
+with _bcol2:
     appendix_b_clicked = st.button("Generate Appendix B", use_container_width=True)
-with col3:
-    st.button("Populate CAR", use_container_width=True)
-with col4:
-    st.button("Generate Recommendation", use_container_width=True)
+with _bcol3:
+    populate_car_clicked = st.button("Populate CAR", use_container_width=True)
 
-st.markdown("")
-index_drawings_clicked = st.button(
-    "Index Drawings",
-    key="btn_index_drawings",
-)
-
-if scope_summary_clicked:
-    if not uploaded_pdfs:
-        st.warning("Upload at least one PDF.")
-    else:
-        try:
-            combined_chunks: list[str] = []
-            for f in uploaded_pdfs:
-                combined_chunks.append(f"--- {f.name} ---\n")
-                combined_chunks.append(extract_pdf_text(f.getvalue()))
-                combined_chunks.append("\n\n")
-            parse_spec_division("".join(combined_chunks))
-
-            scope_items_text = st.session_state.get("extracted_scope_items_text")
-            if scope_items_text:
-                docx_bytes = _scope_items_to_docx_bytes(scope_items_text)
-                st.download_button(
-                    label="Download Scope Summary (.docx)",
-                    data=docx_bytes,
-                    file_name=_spaced_download_filename(
-                        [
-                            _project_field(project_number),
-                            _project_field(project_name),
-                            "Scope Summary",
-                        ],
-                        "docx",
-                    ),
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                )
-        except Exception as exc:
-            st.error(f"Could not read or process PDFs: {exc}")
-
-if appendix_b_clicked:
-    missing = []
-    if not _has_scope_summary_output():
-        missing.append("Generate Scope Summary")
-    if not _has_drawing_index_file():
-        missing.append("Index Drawings")
-    if missing:
+# ── Generate Scope ────────────────────────────────────────────────────────────
+if generate_scope_clicked:
+    if not project_number:
+        st.warning("Enter a Project Number in the sidebar before generating scope.")
+    elif not drawings_files and not spec_files:
         st.warning(
-            "Run "
-            + " and ".join(missing)
-            + " before generating Appendix B."
+            "No files labeled as Drawings or Specifications. "
+            "Label at least one uploaded PDF before running Generate Scope."
         )
+    else:
+        _pf = active_project_folder
+
+        # ── Index all Drawings files ──────────────────────────────────────
+        if drawings_files:
+            st.subheader("Drawing Indexing")
+            if len(drawings_files) == 1:
+                st.info(f"Indexing drawings: {drawings_files[0].name}")
+            else:
+                st.info(f"Indexing {len(drawings_files)} drawings file(s): " +
+                        ", ".join(f.name for f in drawings_files))
+            _combined_index: list[dict] = []
+            for _df in drawings_files:
+                try:
+                    index_drawings(
+                        _df.getvalue(),
+                        project_number,
+                        project_name,
+                        project_folder=_pf,
+                    )
+                except Exception as exc:
+                    st.error(f"Could not index {_df.name}: {exc}")
+        else:
+            st.warning("No files labeled 'Drawings' — drawing index skipped.")
+
+        # ── Extract all Specifications files ──────────────────────────────
+        if spec_files:
+            st.subheader("Specification Extraction")
+            combined_chunks: list[str] = []
+            for _sf in spec_files:
+                st.info(f"Extracting text: {_sf.name}")
+                combined_chunks.append(f"--- {_sf.name} ---\n")
+                try:
+                    combined_chunks.append(extract_pdf_text(_sf.getvalue()))
+                except Exception as exc:
+                    st.error(f"Could not extract text from {_sf.name}: {exc}")
+                combined_chunks.append("\n\n")
+            if combined_chunks:
+                try:
+                    parse_spec_division("".join(combined_chunks), project_folder=_pf)
+                    scope_items_text = st.session_state.get("extracted_scope_items_text")
+                    if scope_items_text:
+                        docx_bytes = _scope_items_to_docx_bytes(scope_items_text)
+                        st.download_button(
+                            label="Download Scope Summary (.docx)",
+                            data=docx_bytes,
+                            file_name=_spaced_download_filename(
+                                [_project_field(project_number), _project_field(project_name), "Scope Summary"],
+                                "docx",
+                            ),
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        )
+                except Exception as exc:
+                    st.error(f"Specification extraction failed: {exc}")
+        else:
+            st.warning("No files labeled 'Specifications' — spec extraction skipped.")
+
+# ── Generate Appendix B ───────────────────────────────────────────────────────
+if appendix_b_clicked:
+    _pf = active_project_folder
+    _missing = []
+    if not _has_scope_summary_output():
+        _missing.append("Generate Scope (Specifications)")
+    if not _has_drawing_index_file(_pf):
+        _missing.append("Generate Scope (Drawings)")
+    if _missing:
+        st.warning("Run " + " and ".join(_missing) + " before generating Appendix B.")
     elif not trade_or_division:
         st.warning("Select a Trade or Division in the sidebar.")
     else:
@@ -1274,6 +1621,7 @@ if appendix_b_clicked:
                 estimator_notes,
                 division_notes_trade,
                 trade_or_division.strip(),
+                project_folder=_pf,
             )
             appendix_text = st.session_state.get("appendix_b_scope_items")
             if appendix_text:
@@ -1305,11 +1653,6 @@ if appendix_b_clicked:
         except Exception as exc:
             st.error(f"Could not generate Appendix B: {exc}")
 
-if index_drawings_clicked:
-    if not uploaded_pdfs:
-        st.warning("Upload at least one PDF.")
-    else:
-        try:
-            index_drawings(uploaded_pdfs[0].getvalue(), project_number, project_name)
-        except Exception as exc:
-            st.error(f"Could not index drawings: {exc}")
+# ── Populate CAR ─────────────────────────────────────────────────────────────
+if populate_car_clicked:
+    st.info("Coming soon — upload trade quotes to populate CAR.")
